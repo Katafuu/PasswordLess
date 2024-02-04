@@ -1,0 +1,76 @@
+body {
+  width: 30rem;
+  height: 35rem;
+  background: #202020;
+  border: 1px solid antiquewhite;
+  border-radius: 20px;
+}
+p {
+  color:azure;
+  text-align: center;
+}
+head,h1,h2,h3{
+  color: whitesmoke;
+  
+}
+#maintitle {
+  border: 2px solid red;
+  padding: 10px;
+  border-radius: 30px 10px;
+  text-align: center;
+}
+
+.h {
+  text-align: center;
+}
+
+.button {
+  border: none;
+  color: white;
+  padding: 10px 17px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 2px 1px;
+  cursor: pointer;
+  transition-duration: 0.4s;
+}
+.button:hover {
+  background-color: white;
+  color: black;
+  border-radius: 5px;
+}
+  
+.button1 {background-color: #04AA6D;border-radius: 12px;border-color: green;} /* Green */
+.button2 {background-color: #008CBA;border-radius: 12px;border-color: blue;} /* Blue */
+
+#text {
+  color: white;
+  font-size: larger;
+  font:bold;
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  text-align: center;
+}
+#title {
+  color: white;
+  font-size: larger;
+  font:bold;
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  text-align: center;
+}
+.centerimg {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+.alignbutton {
+  display: block;
+  text-align: end;
+  margin: auto;
+}
+.form {
+  display: inline-block;
+}
