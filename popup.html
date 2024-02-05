@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=3" />
   <link rel="icon" type="icons/png" href="/icon-128.png" />
   <link rel="stylesheet" href="popup.css" />
-  <div id="title">Main Menu</div>
+  <div id="maintitle">Main Menu</div>
   
   
 </head>
@@ -15,13 +15,25 @@
 
 
 
-<p>Manage your account and modify saved logins!</p>
+<h1>Manage your account and modify saved logins!</h1>
 
-<a href="./login.html" class="alignbutton">
-  <button class="button button1">Login</button>
-</a>
+<div id="bar">
+  <a href="./loginsignup/login.html" class="alignbutton">
+    <button class="button button1">Login</button>
+  </a>
+  <a href="./loginsignup/signup.html">
+    <button class="button button2 center">Signup</button>
+  </a>
+</div>
 <!-- <PHP echo shell_exec("python script.py \"Parameter #1\" \"Parameter #2\"");> -->
-<br><p>Hi</p>
+<br><p class = 'pl'>See your saved logins here:
+  <div id="alignend">
+    <a href=managesavedcreds.html>
+      <button type = "inline-block"; class="button button3">Modify</button>
+    </a>
+  </div>
+
+</p>
 
 
 

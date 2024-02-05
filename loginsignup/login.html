@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <title>Login/Signup Page</title>
+  <meta charset="utf-8" /> 
+  <meta name="viewport" content="width=device-width,initial-scale=3" />
+  <link rel="stylesheet" href="..\popup.css" />
+  <div id="maintitle">LOGIN</div>
+  <style>
+    body {
+      border: 0px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<body>
+
+<img src="../icons/icon-128.png" width = 200 class="centerimg">
+<div id="formpage">
+  <form onsubmit="myFunction()">
+    <input type="text" id="uname" name="uname" placeholder="Username/Email"><br>
+    <input type="password" id="pwd" name="pwd" placeholder="Password"><br><br>
+    <input type="submit" value="Login" class = "button">
+    <div id="check">
+      <input type="checkbox" id="remember">
+      <label for="remember">Remember me</label>
+    </div>
+  </form>
+</div>
+<div id="centertext">
+  Already have an account?<a href="signup.html">
+    <button class="button button2">Sign Up</button>
+  </a>
+</div>
+
+<script src="login.js"></script>
+</script>
+</body>
+</html>
