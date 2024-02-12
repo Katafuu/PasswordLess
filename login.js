@@ -11,3 +11,12 @@ $(window).on("hashchange", function () {
 });
 $(window).trigger("hashchange");
 
+
+
+function Check() {
+	var uname = document.getElementById("uname").value;
+	var pwd = document.getElementById("logPwd").value;
+	const test = fetch("http://192.168.0.135:8000/");
+	
+} 
+
