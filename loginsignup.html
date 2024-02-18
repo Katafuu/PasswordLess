@@ -7,17 +7,13 @@
   <meta charset="utf-8" /> 
   <meta name="viewport" content="width=device-width,initial-scale=3" />
   <link rel="stylesheet" href="./loginsignup.css" />
-
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 </head>
 
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"
-integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
+<!-- updated -->
 <body>
-
-  <body>
     <div class="box">
-
         <img src="icon-128.png">
         <div class="page">
             <div class="header">
@@ -26,9 +22,9 @@ integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="ano
             </div>
             <div id="errorMsg"></div>
             <div class="content">
-                <form class="login" name="loginForm" onsubmit="Check()" method="POST">
-                    <input type="text" name="name" id="uname" placeholder="Username">
-                    <input type="password" name="password" id="logPwd" placeholder="Password">
+                <form class="login" id="loginForm" onsubmit="submitLoginData()" method="POST">
+                    <input type="text" id="logEmail" placeholder="Email">
+                    <input type="password" id="logPassword" placeholder="Password">
                     <div id="check">
                         <input type="checkbox" id="remember">
                         <label for="remember">Remember me</label>
@@ -37,10 +33,10 @@ integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="ano
                     <input type="submit" value="Login">
                     <a href="#">Forgot Password?</a>
                 </form>
-                <form class="signup" name="signupForm" onsubmit="Check()" method="POST">
-                    <input type="email" name="email" id="signEmail" placeholder="Email">
-                    <input type="text" name="name" id="signName" placeholder="Username">
-                    <input type="password" name="password" id="signPassword" placeholder="Password"><br>
+                <form class="signup" id="signupForm" onsubmit="submitSignupData()" method="POST">
+                    <input type="email"  id="signEmail" placeholder="Email">
+                    <input type="text" id="signName" placeholder="Username">
+                    <input type="password" id="signPassword" placeholder="Password"><br>
                     <input type="submit" value="SignUp">
                 </form>
             </div>
