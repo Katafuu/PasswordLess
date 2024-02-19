@@ -8,6 +8,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=3" />
   <link rel="stylesheet" href="./loginsignup.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <script src="login.js"></script>
+
 </head>
 
 
@@ -20,9 +22,10 @@
                 <a id="login" class="active" href="#login">login</a>
                 <a id="signup" href="#signup">signup</a>
             </div>
+            <button id="aha">CLICK ME TO DIE</button>
             <div id="errorMsg"></div>
             <div class="content">
-                <form class="login" id="loginForm" onsubmit="submitLoginData()" method="POST">
+                <form class="login" id="loginForm" onsubmit="sendLoginData()" method="POST">
                     <input type="text" id="logEmail" placeholder="Email">
                     <input type="password" id="logPassword" placeholder="Password">
                     <div id="check">
@@ -33,7 +36,7 @@
                     <input type="submit" value="Login">
                     <a href="#">Forgot Password?</a>
                 </form>
-                <form class="signup" id="signupForm" onsubmit="submitSignupData()" method="POST">
+                <form class="signup" id="signupForm" onsubmit="sendSignupData()" method="POST">
                     <input type="email"  id="signEmail" placeholder="Email">
                     <input type="text" id="signName" placeholder="Username">
                     <input type="password" id="signPassword" placeholder="Password"><br>
@@ -44,11 +47,6 @@
     </div>
 
 
-<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-<script src="login.js"></script>
-
-<script src="https://code.jquery.com/jquery-3.3.1.min.js"
-integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
 </body>
 </html>

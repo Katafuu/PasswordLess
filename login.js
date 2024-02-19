@@ -12,28 +12,49 @@ $(window).on("hashchange", function () {
 $(window).trigger("hashchange");
 
 
+
 function sendSignupData() {
-	$.post("192.168.0.135:8000/users/addUser",
-		{
-			email: document.getElementById("signEmail").value,
-			username: "placeholder to allow send",
-			password: document.getElementById("signPassword").value
+	const options = {
+		method: 'POST',
+		headers: {
+				'Content-Type':
+						'application/json'
 		},
-		function(data,status){
-			alert("Data: " + data + "\nStatus: " + status);
-		});
-} 
+		body: JSON.stringify({
+			email: document.getElementById("signEmail").value,
+			username: document.getElementById("signName").value,
+			password: document.getElementById("signPassword").value
+		},)
+	}
+	let fetchRes = fetch("http://192.168.0.135:8000/users/addUser",options);
+		fetchRes.then(res => res.json())
+		.then(d => {console.log(d)});
+}; 
 
 
 function sendLoginData() {
-	$.post("192.168.0.135:8000/users/loginUser",
-		{
+	let options = {
+		method: 'POST',
+		headers: {
+				'Content-Type':
+						'application/json'
+		},
+		body: JSON.stringify({
 			email: document.getElementById("logEmail").value,
 			username: "placeholder to allow send",
 			password: document.getElementById("logPassword").value
-		},
-		function(data,status){
-			alert("Data: " + data + "\nStatus: " + status);
-		});
-} 
+		},)
+	};
+}; 
 
+
+function testGet() {
+	fetch("http://192.168.0.135:8000/")
+	.then(data => data.json())
+	.then(msg => console.log(msg));
+}
+$(document).ready(function(){
+$("button").click(function(){
+	sendSignupData()
+});
+});
