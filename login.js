@@ -18,7 +18,7 @@ function sendSignupData() {
 		method: 'POST',
 		headers: {
 				'Content-Type':
-						'application/json'
+						'application/json;charset=utf-8'
 		},
 		body: JSON.stringify({
 			email: document.getElementById("signEmail").value,
@@ -26,8 +26,8 @@ function sendSignupData() {
 			password: document.getElementById("signPassword").value
 		},)
 	}
-	let fetchRes = fetch("http://192.168.0.135:8000/users/addUser",options);
-		fetchRes.then(res => res.json())
+	fetch("http://192.168.0.135:8000/users/addUser",options)
+		.then(res => res.json())
 		.then(d => {console.log(d)});
 }; 
 
@@ -46,15 +46,3 @@ function sendLoginData() {
 		},)
 	};
 }; 
-
-
-function testGet() {
-	fetch("http://192.168.0.135:8000/")
-	.then(data => data.json())
-	.then(msg => console.log(msg));
-}
-$(document).ready(function(){
-$("button").click(function(){
-	sendSignupData()
-});
-});
