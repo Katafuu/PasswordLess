@@ -37,7 +37,7 @@ function clearList(lstid) {
 }
 
 function updateCreds() {
-	fetch("http://192.168.0.135:8000/users/getAll")
+	fetch("http://passwordless.duckdns.org:8000/users/getAll")
 	.then(data => data.json())
 	.then(function(data) {
 	clearList("credList")
