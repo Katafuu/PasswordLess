@@ -26,7 +26,7 @@ function sendSignupData() {
 			password: document.getElementById("signPassword").value
 		},)
 	}
-	fetch("http://passwordless.duckdns.org/users/addUser",options)
+	fetch("http://passwordless.duckdns.org:8000/users/addUser",options)
 		.then(res => res.json())
 		.then(d => {console.log(d)});
 }; 
