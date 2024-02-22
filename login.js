@@ -49,3 +49,4 @@ function sendLoginData() {
 		.then(res => res.json())
 		.then(d => {console.log(d)});
 }; 
+

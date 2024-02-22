@@ -22,8 +22,7 @@ def createtables():
               email VARCHAR(255) PRIMARY KEY NOT NULL,
               username VARCHAR(255) NOT NULL,
               password VARCHAR(30) NOT NULL,
-              date_created CHAR(8),
-              salt CHAR(22),
+              date_created CHAR(8)
   );""")
   # crsr.execute("INSERT INTO users VALUES ('f3d9804a-a019-4b02-8823-42a2bff141a7','Aly@gmail.com','Aly','supersecretpwd','20/20/20'),('e6f35720-cbca-4975-926f-548f1dfd77ff','Joel@gmail.com','Joel','varunisthe123+4','20/20/20')")
   crsr.execute("""CREATE TABLE IF NOT EXISTS credentials (
@@ -43,8 +42,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
 origins = [
     "http://passwordless.duckdns.org",
-    "http://192.168.0.135:8000/"
-    "file:///D:/Projects/PasswordLess/Website/loginsignup.html",
+    "http://www.passwordless.duckdns.org",
     'null'
 ]
 
@@ -89,6 +87,7 @@ def create_access_token(to_encode: dict, expires_delta: timedelta | None = None)
 
 def authenticate_user(email: str, password: str):
     user = get_user_by_email(email)
+    print(user)
     if not user:
         return False
     if not verify_password(password, user.password):
@@ -133,7 +132,7 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
         )
   expiry = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
   data = {"sub":str(user.uid)}
-  access_token = create_access_token(data=data, expires_delta=expiry)
+  access_token = create_access_token(data, expiry)
   return {"access_token":access_token, "token_type":"bearer"}
     
 @app.get("/users/me", response_model=User)
