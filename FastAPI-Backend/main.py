@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 import sqlite3
 from datetime import timedelta, datetime, timezone
-from models import User, Credential, Token
+from models import UserBase, UserInDB, UserIn, UserOut, Credential, Token
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
@@ -18,7 +18,7 @@ def createtables():
   crsr = conn.cursor()
 
   crsr.execute("""CREATE TABLE IF NOT EXISTS users (
-              uid CHAR(36),
+              uid CHAR(36) NOT NULL,
               email VARCHAR(255) PRIMARY KEY NOT NULL,
               username VARCHAR(255) NOT NULL,
               password VARCHAR(30) NOT NULL,
@@ -26,18 +26,17 @@ def createtables():
   );""")
   # crsr.execute("INSERT INTO users VALUES ('f3d9804a-a019-4b02-8823-42a2bff141a7','Aly@gmail.com','Aly','supersecretpwd','20/20/20'),('e6f35720-cbca-4975-926f-548f1dfd77ff','Joel@gmail.com','Joel','varunisthe123+4','20/20/20')")
   crsr.execute("""CREATE TABLE IF NOT EXISTS credentials (
-               credid CHAR(36) PRIMARY KEY,
+               credid CHAR(36) PRIMARY KEY NOT NULL,
                uid CHAR(36) NOT NULL,
                site VARCHAR(255) NOT NULL,
                username VARCHAR(255),
-               password VARCHAR(255),
+               password VARCHAR(255) NOT NULL,
                date_added CHAR(8),
                FOREIGN KEY (uid) REFERENCES users (uid) 
 
   );""")
   conn.commit()
   conn.close()
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
 origins = [
@@ -45,7 +44,6 @@ origins = [
     "http://www.passwordless.duckdns.org",
     'null'
 ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -54,10 +52,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def convert_list_to_usermodel(data: list):
-  fields = User.__fields__
+def convert_list_to_userindbmodel(data: list):
+  fields = UserInDB.__fields__
   kwargs = dict(zip(fields,data))
-  return User(**kwargs)
+  return UserInDB(**kwargs)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -71,7 +69,7 @@ def get_user_by_email(email):
   with sqlite3.connect("users.db") as conn:
     try:
       user = conn.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
-      user = convert_list_to_usermodel(user)
+      user = convert_list_to_userindbmodel(user)
       return user
     except:
       return None
@@ -113,11 +111,10 @@ async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     return user
 
 @app.post("/users/addUser", status_code=201) #create new user account
-async def add_user(user: User):
+async def add_user(user: UserIn):
   user.password = hash_password(user.password)
   with sqlite3.connect("users.db") as conn:
-    date = datetime.now().strftime("%x")
-    conn.execute(f"INSERT INTO users VALUES('{user.uid}','{user.email}','{user.username}','{user.password}','{date}')")
+    conn.execute(f"INSERT INTO users VALUES('{user.uid}','{user.email}','{user.username}','{user.password}','{user.date_created}')")
     conn.commit()
     return {"message":f"user{user.uid}successfully added", "name":{user.username}}
 
@@ -135,8 +132,8 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
   access_token = create_access_token(data, expiry)
   return {"access_token":access_token, "token_type":"bearer"}
     
-@app.get("/users/me", response_model=User)
-async def read_me(current_user: Annotated[User, Depends(process_token)]):
+@app.get("/users/config", response_model=UserOut)
+async def read_me(current_user: Annotated[UserOut, Depends(process_token)]):
    return current_user
 
 
@@ -161,14 +158,14 @@ async def getall():
     return conn.execute(f"SELECT * FROM users").fetchall()   
 
 @app.post("/addCred")
-async def addCred(cred: Credential):
+async def addCred(cred: Annotated[Credential, Depends(process_token)]):
   with sqlite3.connect("users.db") as conn:
     conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{cred.uid}','{cred.site}','{cred.email}','{cred.username}',{cred.password},{cred.date_added})")
     conn.commit()
   return {"response": "success", "username": cred.username, "site": cred.site}
 
 @app.get("/getCredsbyUID")
-async def getCreds(uid: str):
+async def getCreds(uid: Annotated[str, Depends(process_token)]):
   with sqlite3.connect("users.db") as conn:
     creds = conn.execute(f"SELECT * FROM credentials WHERE uid = '{uid}'").fetchall()
     conn.commit()

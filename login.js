@@ -28,25 +28,14 @@ function sendSignupData() {
 	}
 	fetch("http://passwordless.duckdns.org:8000/users/addUser",options)
 		.then(res => res.json())
-		.then(d => {console.log(d)});
+		.then(d => {console.log(d)})
+		.then(function(token) {
+			const d = new Date();
+			d.setTime(d.getTime()+30*1000)  // 30 mins expiry
+			document.cookie = "token="+token + "expires="+d.toUTCString() + ";path=/";
+		});
+		
+	window.location.href("#login");
 }; 
 
-
-function sendLoginData() {
-	let options = {
-		method: 'POST',
-		headers: {
-				'Content-Type':
-						'application/json'
-		},
-		body: JSON.stringify({
-			email: document.getElementById("logEmail").value,
-			username: "placeholder to allow send",
-			password: document.getElementById("logPassword").value
-		},)
-	};
-	fetch("http://passwordless.duckdns.org/users/loginUser",options)
-		.then(res => res.json())
-		.then(d => {console.log(d)});
-}; 
 

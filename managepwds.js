@@ -36,8 +36,30 @@ function clearList(lstid) {
 	lst.innerHTML = '';
 }
 
+
+function getCookieToken() {
+	let cookies = document.cookie.split(';');
+	for(i = 0; i < cookies.length; i++) {
+	  cookies[i] = cookies[i].split('=')
+	};
+	for (x = 0; x < cookies.length; x++){
+	  if (cookies[x][0] == 'token') {
+		return cookies[x][1];
+	  };
+	};
+  };
+
 function updateCreds() {
-	fetch("http://passwordless.duckdns.org:8000/users/getAll")
+	var token = getCookieToken();
+	const options = {
+		method: 'GET',
+		headers: {
+				'Content-Type':
+						'application/json;charset=utf-8',
+				"Authorization": 'Bearer '+token
+		}
+	};
+	fetch("http://passwordless.duckdns.org:8000/users/config", options)
 	.then(data => data.json())
 	.then(function(data) {
 	clearList("credList")
