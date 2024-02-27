@@ -31,4 +31,9 @@ class Credential(BaseModel):
 
 class Token(BaseModel):
   access_token: str
-  token_type: str   
+  token_type: str
+
+class decrypt_data(BaseModel):
+   url:str
+   salt:bytes
+   iv:bytes

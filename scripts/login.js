@@ -26,16 +26,17 @@ function sendSignupData() {
 			password: document.getElementById("signPassword").value
 		},)
 	}
-	fetch("http://passwordless.duckdns.org:8000/users/addUser",options)
+	fetch("https://passwordless.duckdns.org:8000/users/addUser",options)
 		.then(res => res.json())
 		.then(d => {console.log(d)})
 		.then(function(token) {
-			const d = new Date();
-			d.setTime(d.getTime()+30*1000)  // 30 mins expiry
-			document.cookie = "token="+token + "expires="+d.toUTCString() + ";path=/";
-		});
-		
+			setToken(token)
 	window.location.href("#login");
-}; 
+});
+};
 
-
+function setToken(token) {
+	const d = new Date();
+	d.setTime(d.getTime()+30*1000)  // 30 mins expiry
+	document.cookie = "name=token" + ";token="+token + ";expires="+d.toUTCString() + ";path=/";
+};

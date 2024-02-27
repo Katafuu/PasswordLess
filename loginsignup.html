@@ -8,14 +8,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=3" />
   <link rel="stylesheet" href="css/loginsignup.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-  <script src="login.js"></script>
+  <script src="scripts/login.js"></script>
 
 </head>
 
 
 <body>
     <div class="box">
-        <img src="icon-128.png">
+        <img src="icons/icon-128.png">
         <div class="page">
             <div class="header">
                 <a id="login" class="active" href="#login">login</a>
@@ -23,7 +23,7 @@
             </div>
             <div id="errorMsg"></div>
             <div class="content">
-                <form class="login" id="loginForm" method="POST" action="http://passwordless.duckdns.org:8000/token">
+                <form class="login" id="loginForm" method="POST" action="https://passwordless.duckdns.org:8000/token">
                     <input name= "username" type="text" id="logEmail" placeholder="Email">
                     <input name= "password" type="password" id="logPassword" placeholder="Password">
                     <div id="check">

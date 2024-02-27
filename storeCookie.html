@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" /> 
+    <meta name="viewport" content="width=device-width,initial-scale=3" />
+    <script>
+      const queryStr = window.location.search;
+      const QueryParams = new URLSearchParams(queryStr);
+      const encrypted_token = {'url': QueryParams.get('url'), 'salt': QueryParams.get('salt'), 'vi': QueryParams.get('vi')};
+      console.log(encrypted_token)
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type':
+              'application/json;charset=utf-8'
+        },
+        body: JSON.stringify(encrypted_token)
+      }
+      fetch("https://passwordless.duckdns.org:8000/decrypt?data=${encrypted_token}",options)
+      .then(function(token) {
+        console.log(token)
+        const d = new Date();
+	      d.setTime(d.getTime()+30*1000)  // 30 mins expiry
+	      document.cookie = "name=token" + ";token="+token['plaintext'] + ";expires="+d.toUTCString() + ";path=/"; // add cookie security
+      })
+      // window.location.href = "./"
+    </script>
+  </head>
+  <body>
+    <h1>Redirecting...</h1>
+  </body>
+</html>

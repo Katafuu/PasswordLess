@@ -1,22 +1,3 @@
-// function sendSignupData() {
-// 	const options = {
-// 		method: 'POST',
-// 		headers: {
-// 				'Content-Type':
-// 						'application/json'
-// 		},
-// 		body: JSON.stringify({
-//       uid: null,  // need to find a way to get uid perhaps from login session which is incomplete atm
-// 			site: window.location.href.split(/[?#]/)[0],
-//       email: document.querySelector('input[type=email]').value,
-// 			username: document.querySelector('input[type=text]').value,
-// 			password: document.querySelector('input[type=password]').value
-// 		},)
-// 	};
-// 	let fetchRes = fetch("http://192.168.0.135:8000/addCred",options);
-// 		fetchRes.then(res => res.json())
-// 		.then(d => {console.log(d)});
-// }; 
 
 function addListItem(lstid, data) {
   const vallist = document.getElementById(lstid);
@@ -59,7 +40,7 @@ function updateCreds() {
 				"Authorization": 'Bearer '+token
 		}
 	};
-	fetch("http://passwordless.duckdns.org:8000/users/config", options)
+	fetch("https://passwordless.duckdns.org:8000/users/config", options)
 	.then(data => data.json())
 	.then(function(data) {
 	clearList("credList")
