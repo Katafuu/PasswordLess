@@ -65,7 +65,6 @@ def create_access_token(to_encode: dict, expires_delta: timedelta | None = None)
 
 def authenticate_user(email: str, password: str):
     user = get_user_by_email(email)
-    print(user)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -75,6 +74,7 @@ def authenticate_user(email: str, password: str):
 async def AES_encrypt(data):
   key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
   ciphertext = PyAES256().encrypt(data,key)
+  print(f"CIPHER:  {ciphertext}")
   return ciphertext
 
 async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -115,13 +115,15 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
   expiry = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
   data = {"sub":str(user.uid)}
   access_token = create_access_token(data, expiry)
-  token_data = AES_encrypt(access_token)
+  token_data = await AES_encrypt(access_token)
+  encrypted_token = decrypt_data(**token_data)
+  encoded = f"?url={encrypted_token.url}&salt={encrypted_token.salt.decode()}&iv={encrypted_token.iv.decode()}"
   return f"""
     <html>
         <head>
             <title>Redirect Page</title>
             <script>
-              window.location.href = "https://passwordless.duckdns.org/storeCookie.html?{token_data}"
+              window.location.href = "https://passwordless.duckdns.org/storeCookie.html{encoded}"
             </script>
         </head>
         <body>
@@ -178,9 +180,9 @@ async def cleardb():
   return("successfully cleared db")
 
 @app.post("/decrypt")
-async def AES_decrypt(cipherdata: decrypt_data):
+def AES_decrypt(data: decrypt_data):
   key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
-  plaintext = PyAES256().decrypt(url=cipherdata.url,salt=cipherdata.url,iv=cipherdata.url, password=key)
+  plaintext = PyAES256().decrypt(url=data.url, salt=data.salt, iv=data.iv, password=key)
   plaintext = bytes.decode(plaintext)
   return {"plaintext": plaintext}
 

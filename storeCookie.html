@@ -6,7 +6,7 @@
     <script>
       const queryStr = window.location.search;
       const QueryParams = new URLSearchParams(queryStr);
-      const encrypted_token = {'url': QueryParams.get('url'), 'salt': QueryParams.get('salt'), 'vi': QueryParams.get('vi')};
+      const encrypted_token = {'url': QueryParams.get('url'), 'salt': QueryParams.get('salt'), 'iv': QueryParams.get('iv')};
       console.log(encrypted_token)
       const options = {
         method: 'POST',
@@ -16,7 +16,7 @@
         },
         body: JSON.stringify(encrypted_token)
       }
-      fetch("https://passwordless.duckdns.org:8000/decrypt?data=${encrypted_token}",options)
+      fetch("https://passwordless.duckdns.org:8000/decrypt", options)
       .then(function(token) {
         console.log(token)
         const d = new Date();
