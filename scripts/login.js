@@ -1,7 +1,3 @@
-import {setToken, checkTokenExists} from 'cookie-manager.js'
-
-
-
 $(window).on("hashchange", function () {
 	if (location.hash.slice(1) == "signup") {
 		$(".page").addClass("extend");
@@ -32,11 +28,7 @@ function sendSignupData() {
 	}
 	fetch("https://passwordless.duckdns.org:8000/users/addUser",options)
 		.then(res => res.json())
-		.then(d => {console.log(d)})
-		.then(function(token) {
-			setToken(token)
-	window.location.href("#login");
-});
+		.then(d => {console.log(d)});
+		window.location.href = "https://passwordless.duckdns.org/loginsignup.html?created=True"
 };
 
-setToken(token)

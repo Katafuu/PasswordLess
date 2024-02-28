@@ -1,12 +1,15 @@
 function getCookieToken() {
 	let cookies = document.cookie.split(';');
-	for(i = 0; i < cookies.length; i++) {
+	for(let i = 0; i < cookies.length; i++) {
 	  cookies[i] = cookies[i].split('=')
 	};
-	for (x = 0; x < cookies.length; x++){
+	for (let x = 0; x < cookies.length; x++){
 	  if (cookies[x][0] == 'token') {
-		return cookies[x][1];
-	  };
+		  return cookies[x][1];
+	  }
+    else {
+      return null
+    };
 	};
 };
 

@@ -17,7 +17,20 @@ function clearList(lstid) {
 	lst.innerHTML = '';
 }
 
-import getCookieToken from 'cookie-manager.js'
+function getCookieToken() {
+	let cookies = document.cookie.split(';');
+	for(let i = 0; i < cookies.length; i++) {
+	  cookies[i] = cookies[i].split('=')
+	};
+	for (let x = 0; x < cookies.length; x++){
+	  if (cookies[x][0] == 'token') {
+		  return cookies[x][1];
+	  }
+    else {
+      return False
+    };
+	};
+};
 
 function updateCreds() {
 	var token = getCookieToken();
