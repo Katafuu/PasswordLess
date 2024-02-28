@@ -43,6 +43,7 @@ function updateCreds() {
 		}
 	};
 	fetch("https://passwordless.duckdns.org:8000/users/config", options)
+	.catch(console.error())
 	.then(data => data.json())
 	.then(function(data) {
 	clearList("credList")

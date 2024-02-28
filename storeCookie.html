@@ -17,13 +17,16 @@
         body: JSON.stringify(encrypted_token)
       }
       fetch("https://passwordless.duckdns.org:8000/decrypt", options)
+      .then(token => token.json())
       .then(function(token) {
-        console.log(token)
+        token = token['plaintext'];
         const d = new Date();
-	      d.setTime(d.getTime()+30*1000)  // 30 mins expiry
-	      document.cookie = "name=token" + ";token="+token['plaintext'] + ";expires="+d.toUTCString() + ";path=/"; // add cookie security
+	      d.setTime(d.getTime()+30*60*1000)  // 30 mins expiry
+        const cookiefinal = "token="+token + ";expires="+d.toUTCString() + ";path=/";
+	      document.cookie =  cookiefinal
+        console.log(document.cookie)
       });
-      location.replace("https://passwordless.duckdns.org/")
+      location.replace("https://passwordless.duckdns.org")
     </script>
   </head>
   <body>

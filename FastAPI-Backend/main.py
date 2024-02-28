@@ -37,7 +37,7 @@ def convert_list_to_userindbmodel(data: list):
   fields = UserInDB.model_fields
   kwargs = dict(zip(fields,data))
   return UserInDB(**kwargs)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token",scheme_name="JWT")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)  # returns True or False by hashing the plain pass then comparing with the hashed pass
@@ -71,11 +71,7 @@ def authenticate_user(email: str, password: str):
         return False
     return user
 
-async def AES_encrypt(data):
-  key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
-  ciphertext = PyAES256().encrypt(data,key)
-  print(f"CIPHER:  {ciphertext}")
-  return ciphertext
+
 
 async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
@@ -103,7 +99,7 @@ async def add_user(user: UserIn):
     conn.commit()
     return {"message":f"user{user.uid}successfully added", "name":{user.username}}
 
-@app.post("/token", response_class=HTMLResponse)
+@app.post("/login")
 async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
   user = authenticate_user(form_data.username, form_data.password)
   if not user:
@@ -115,23 +111,7 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
   expiry = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
   data = {"sub":str(user.uid)}
   access_token = create_access_token(data, expiry)
-  token_data = await AES_encrypt(access_token)
-  encrypted_token = decrypt_data(**token_data)
-  encoded = f"?url={encrypted_token.url}&salt={encrypted_token.salt.decode()}&iv={encrypted_token.iv.decode()}"
-  return f"""
-    <html>
-        <head>
-            <title>Redirect Page</title>
-            <script>
-              window.location.href = "https://passwordless.duckdns.org/storeCookie.html{encoded}"
-            </script>
-        </head>
-        <body>
-            <h1>Redirecting...</h1>
-        </body>
-    </html>
-    """
-
+  return {"access_token": access_token, "token_type":"bearer"}
 
 @app.get("/users/config", response_model=UserOut)
 async def read_me(current_user: Annotated[UserOut, Depends(process_token)]):
@@ -178,6 +158,12 @@ async def cleardb():
     conn.execute(f"DELETE FROM users")
     conn.commit()
   return("successfully cleared db")
+
+@app.post("/encrypt")
+async def AES_encrypt(data: str):
+  key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
+  ciphertext = PyAES256().encrypt(data,key)
+  return ciphertext
 
 @app.post("/decrypt")
 def AES_decrypt(data: decrypt_data):
