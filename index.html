@@ -3,13 +3,20 @@
 
 <head>
 
-  <script src="scripts/index.js"></script>
+  <script type="module">
+    import tokenRedirectCheck from 'cookie-manager.js'
+    tokenRedirectCheck()
+  </script>
   <title>Login/Signup Page</title>
   <meta charset="utf-8" /> 
   <meta name="viewport" content="width=device-width,initial-scale=3" />
+  <link rel="stylesheet" href="css/modifypwds.css" />
 </head>
 
 <body>
- <a href="loginsignup.html">Incase its not loading, click me to go to login/signup page</a>
+  <h1>
+    <a href="loginsignup.html">If no redirect, click me</a>
+  </h1>
+ 
 </body>
 </html>

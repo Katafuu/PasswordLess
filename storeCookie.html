@@ -22,8 +22,8 @@
         const d = new Date();
 	      d.setTime(d.getTime()+30*1000)  // 30 mins expiry
 	      document.cookie = "name=token" + ";token="+token['plaintext'] + ";expires="+d.toUTCString() + ";path=/"; // add cookie security
-      })
-      // window.location.href = "./"
+      });
+      location.replace("https://passwordless.duckdns.org/")
     </script>
   </head>
   <body>

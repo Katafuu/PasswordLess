@@ -1,3 +1,7 @@
+import {setToken, checkTokenExists} from 'cookie-manager.js'
+
+
+
 $(window).on("hashchange", function () {
 	if (location.hash.slice(1) == "signup") {
 		$(".page").addClass("extend");
@@ -35,8 +39,4 @@ function sendSignupData() {
 });
 };
 
-function setToken(token) {
-	const d = new Date();
-	d.setTime(d.getTime()+30*1000)  // 30 mins expiry
-	document.cookie = "name=token" + ";token="+token + ";expires="+d.toUTCString() + ";path=/";
-};
+setToken(token)
