@@ -11,6 +11,11 @@ $(window).on("hashchange", function () {
 });
 $(window).trigger("hashchange");
 
+function setToken(token) {
+  const d = new Date();
+  d.setTime(d.getTime()+30*60*1000)  // 30 mins expiry
+  document.cookie = "token="+token + ";expires="+d.toUTCString() + ";path=/";
+};
 
 
 function sendSignupData() {
@@ -21,7 +26,7 @@ function sendSignupData() {
 						'application/json;charset=utf-8'
 		},
 		body: JSON.stringify({
-			email: document.getElementById("signEmail").value,	
+			email: document.getElementById("signEmail").value,
 			username: document.getElementById("signName").value,
 			password: document.getElementById("signPassword").value
 		},)
@@ -33,22 +38,19 @@ function sendSignupData() {
 };
 
 $(document).ready(function () {
-  $("loginForm").submit(function (event) {
-    var formData = {
-      email: document.getElementById("logEmail"),
-      password: document.getElementById("logPassword"),
-    };
-
-    $.ajax({
-      type: "POST",
-      url: "https://passwordless.duckdns.org:8000/login",
-      data: formData,
-      dataType: "json",
-      encode: true,
-    }).done(function (data) {
-      console.log(data);
-    });
-
-    event.preventDefault();
-  });
+  $("#loginForm").submit(function (event) {
+		event.preventDefault();
+		const formData = new FormData(document.querySelector("#loginForm"));
+		const options = {
+			method: 'POST',
+			body: formData,
+		}
+		fetch("https://passwordless.duckdns.org:8000/getToken", options)
+		.then(data => data.json())
+		.then(function(data) {
+			console.log(data)
+			setToken(data['access_token']);
+			window.location.href = "./"
+		})
+		})
 });

@@ -20,14 +20,21 @@ class UserIn(UserBase):
 
 class UserOut(UserBase):
    pass
+
+
+
+
 class Credential(BaseModel):
   credid: Optional[UUID] = Field(default_factory=uuid4)
   uid: str
   site: str
-  email: str
   username: Optional[str] = "None"
+  email: str
   password: str
   date_added: Optional[str] = Field(default_factory=get_date)
+
+
+ # THIS IS WHERE I LEFT OFF 29th Feb 24. Does it matter what order json is in when creating Credential object?
 
 class Token(BaseModel):
   access_token: str

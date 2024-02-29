@@ -8,14 +8,12 @@ from typing import Annotated
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pyaes256 import PyAES256
-from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 
 SECRET_KEY = "5b0cebd0127a1eb2b06333f7dd133e69686b36fab502ba8c0225a20e7c0b6330"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 10
-templates =Jinja2Templates(directory="templates")
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/getToken",scheme_name="JWT")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
 origins = [
@@ -37,7 +35,6 @@ def convert_list_to_userindbmodel(data: list):
   fields = UserInDB.model_fields
   kwargs = dict(zip(fields,data))
   return UserInDB(**kwargs)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token",scheme_name="JWT")
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)  # returns True or False by hashing the plain pass then comparing with the hashed pass
@@ -45,11 +42,21 @@ def verify_password(plain_password, hashed_password):
 def hash_password(password):
    return pwd_context.hash(password)
 
+def get_user_by_uid(uid):
+  with sqlite3.connect("users.db") as conn:
+    try:
+      user = conn.execute(f"SELECT * FROM users WHERE uid = '{uid}'").fetchone()
+      user = convert_list_to_userindbmodel(user)
+      return user
+    except:
+      return None
+
 def get_user_by_email(email):
   with sqlite3.connect("users.db") as conn:
     try:
       user = conn.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
       user = convert_list_to_userindbmodel(user)
+      print(user)
       return user
     except:
       return None
@@ -71,7 +78,13 @@ def authenticate_user(email: str, password: str):
         return False
     return user
 
-
+def convert_credslist_to_json(lst):
+   result = []
+   fields = Credential.model_fields
+   for cred in lst:
+    kwargs = dict(zip(fields,cred))
+    result.append(kwargs)
+   return result
 
 async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
@@ -81,12 +94,12 @@ async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
+        uid: str = payload.get("sub")
+        if uid is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = get_user_by_email(email)
+    user = get_user_by_uid(uid)
     if user is None:
         raise credentials_exception
     return user
@@ -99,7 +112,7 @@ async def add_user(user: UserIn):
     conn.commit()
     return {"message":f"user{user.uid}successfully added", "name":{user.username}}
 
-@app.post("/login")
+@app.post("/getToken")
 async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
   user = authenticate_user(form_data.username, form_data.password)
   if not user:
@@ -114,7 +127,7 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
   return {"access_token": access_token, "token_type":"bearer"}
 
 @app.get("/users/config", response_model=UserOut)
-async def read_me(current_user: Annotated[UserOut, Depends(process_token)]):
+async def read_me(current_user: Annotated[UserInDB, Depends(process_token)]):
    return current_user
 
 
@@ -123,34 +136,27 @@ async def read_root():
   return {"message": "Server is operational"}
 
 
-@app.get("/users/userbyID")  #get info by UID
-async def find_user(ID: str):
-  with sqlite3.connect("users.db") as conn:
-    result = conn.execute(f"SELECT * FROM users WHERE uid = '{ID}'").fetchall()
-    if result:
-      result = dict(ID=result[0][0], username=result[0][1],password=result[0][2], date = result[0][3])
-    else:
-      result = {"errormsg":"user not found"}
-  return result
-
 @app.get("/users/getAll")
 async def getall():
   with sqlite3.connect('users.db') as conn:
     return conn.execute(f"SELECT * FROM users").fetchall()
 
-@app.post("/addCred")
+@app.post("/creds/addCred")
 async def addCred(cred: Annotated[Credential, Depends(process_token)]):
   with sqlite3.connect("users.db") as conn:
     conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{cred.uid}','{cred.site}','{cred.email}','{cred.username}',{cred.password},{cred.date_added})")
     conn.commit()
   return {"response": "success", "username": cred.username, "site": cred.site}
 
-@app.get("/getCredsbyUID")
-async def getCreds(uid: Annotated[str, Depends(process_token)]):
+@app.get("/creds/getCreds")
+async def getCreds(current_user: Annotated[UserIn, Depends(process_token)]):
   with sqlite3.connect("users.db") as conn:
-    creds = conn.execute(f"SELECT * FROM credentials WHERE uid = '{uid}'").fetchall()
-    conn.commit()
-  return creds
+    creds = conn.execute(f"SELECT * FROM credentials WHERE uid = '{current_user.uid}'").fetchall()
+  return convert_credslist_to_json(creds)
+
+@app.delete("/creds/delCred")
+async def delCred():
+   pass # to work on soon
 
 @app.get("/cleardb")
 async def cleardb():

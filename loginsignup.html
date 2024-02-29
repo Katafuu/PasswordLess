@@ -8,11 +8,6 @@
   <link rel="stylesheet" href="css/loginsignup.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   <script src="scripts/login.js"></script>
-  <style>
-    iframe {
-        display: none;
-    };
-  </style>
 </head>
 
 
@@ -26,7 +21,7 @@
             </div>
             <div id="errorMsg"></div>
             <div class="content">
-                <form class="login" id="loginForm" method="POST" action="https://passwordless.duckdns.org:8000/token" target="storage-container">
+                <form class="login" id="loginForm" method="POST" action="https://passwordless.duckdns.org:8000/getToken">
                     <input name= "username" type="text" id="logEmail" placeholder="Email">
                     <input name= "password" type="password" id="logPassword" placeholder="Password">
                     <div id="check">

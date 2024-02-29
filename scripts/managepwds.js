@@ -27,33 +27,41 @@ function getCookieToken() {
 		  return cookies[x][1];
 	  }
     else {
-      return False
+      return null
     };
 	};
 };
 
 function updateCreds() {
-	var token = getCookieToken();
-	const options = {
-		method: 'GET',
-		headers: {
-				'Content-Type':
-						'application/json;charset=utf-8',
-				"Authorization": 'Bearer '+token
+	
+};
+
+function addTblRecords(tblid, json_data) {
+  const credList = document.getElementById(tblid);
+  const tbl_rec = credList.insertRow(-1)
+  for(const key in json_data) {
+		if(json_data[key] == 'uid' || json_data[key] == 'credid') {
+			{}
 		}
-	};
-	fetch("https://passwordless.duckdns.org:8000/users/config", options)
-	.catch(console.error())
-	.then(data => data.json())
-	.then(function(data) {
-	clearList("credList")
-    for (x = 0;x<data.length;x++) {
-      addListItem("credList",data[x]);
-    }
-  });
-}
+		else {
+			const tbl_dat = document.createElement('td');
+			tbl_dat.innerText = json_data[key];
+			tbl_rec.appendChild(tbl_dat);
+		}
+  };
+  credList.appendChild(tbl_rec);
+};
 
 $(document).ready(function(){
-	updateCreds()
-	});
-
+	const token = getCookieToken();
+	const headers = {'Authorization': 'Bearer '+token}
+	fetch("https://passwordless.duckdns.org:8000/creds/getCreds", {headers})
+	.then(data => data.json())
+	.then(function(data) {
+	console.log(data.json())
+	clearList("credList")
+    for(const i = 0; i < data.length; i++) {
+    	addTblRecords('credList',data[i]);
+  	};
+  });
+});
