@@ -34,7 +34,7 @@ function sendSignupData() {
 	fetch("https://passwordless.duckdns.org:8000/users/addUser",options)
 		.then(res => res.json())
 		.then(d => {console.log(d)});
-		window.location.href = "https://passwordless.duckdns.org/loginsignup.html?created=True"
+	window.location.href = "https://passwordless.duckdns.org/loginsignup.html?created=True"
 };
 
 $(document).ready(function () {
@@ -44,7 +44,7 @@ $(document).ready(function () {
 		const options = {
 			method: 'POST',
 			body: formData,
-		}
+		};
 		fetch("https://passwordless.duckdns.org:8000/getToken", options)
 		.then(data => data.json())
 		.then(function(data) {

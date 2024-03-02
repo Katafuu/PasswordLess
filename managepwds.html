@@ -16,23 +16,28 @@
   <h1>Manage your passwords</h1>
   <div id="page">
     <div class="box">
+    <input class="addBtn" type="button" placeholder="ADD NEW CREDENTIAL">
     <input class="searchbox" type="text" placeholder="Search" onkeyup="updateCreds()">
     
     <table id="credList">
+    <thead>
       <tr>
         <th style="width:20%">Site URL</th>
-        <th style="width:10%">Username</th>
         <th style="width:30%">Email</th>
+        <th style="width:10%">Username</th>
         <th style="width:30%">Password</th>
         <th style="width:10%">Date Added</th>
       </tr>
-      <tr>
-        <td>google.com</td>
-        <td>katafu</td>
-        <td>katafu@gmail.com</td>
-        <td>supersecretpassword</td>
-        <td>20/20/20</td>
-      </tr>
+    </thead>
+      <tbody>
+        <tr>
+          <td>google.com</td>
+          <td>katafu@gmail.com</td>
+          <td>katafu</td>
+          <td>supersecretpassword</td>
+          <td>20/20/20</td>
+        </tr>
+      </tbody>
     </table>
 
     </div>

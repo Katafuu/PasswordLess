@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 import sqlite3
+import json
 from datetime import timedelta, datetime, timezone
 from models import UserInDB, UserIn, UserOut, Credential, Token, decrypt_data
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,16 +32,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def convert_list_to_userindbmodel(data: list):
-  fields = UserInDB.model_fields
-  kwargs = dict(zip(fields,data))
-  return UserInDB(**kwargs)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)  # returns True or False by hashing the plain pass then comparing with the hashed pass
 
 def hash_password(password):
    return pwd_context.hash(password)
+
+def create_access_token(to_encode: dict, expires_delta: timedelta | None = None):
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta #calculates when it should expire
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15) #incase not provided
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def authenticate_user(email: str, password: str):
+    user = get_user_by_email(email)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+def map_list_to_attributes(lst, attrs):
+   result = []
+   for user in lst:
+    kwargs = dict(zip(attrs,user))
+    result.append(kwargs)
+   return result
+
+def convert_list_to_userindbmodel(data: list):
+  fields = UserInDB.model_fields
+  kwargs = dict(zip(fields,data))
+  return UserInDB(**kwargs)
 
 def get_user_by_uid(uid):
   with sqlite3.connect("users.db") as conn:
@@ -61,30 +88,14 @@ def get_user_by_email(email):
     except:
       return None
 
-def create_access_token(to_encode: dict, expires_delta: timedelta | None = None):
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta #calculates when it should expire
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15) #incase not provided
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-def authenticate_user(email: str, password: str):
-    user = get_user_by_email(email)
-    if not user:
-        return False
-    if not verify_password(password, user.hashed_password):
-        return False
-    return user
-
-def convert_credslist_to_json(lst):
-   result = []
-   fields = Credential.model_fields
-   for cred in lst:
-    kwargs = dict(zip(fields,cred))
-    result.append(kwargs)
-   return result
+def get_creds(current_user: UserIn, oldBOOL: int):
+  with sqlite3.connect('users.db') as conn:
+    cursor = conn.cursor()
+    cred_data = cursor.execute(f"SELECT * FROM credentials WHERE uid='{current_user.uid}' AND old={oldBOOL};").fetchall()
+    columns = [x[0] for x in cursor.description]
+    creds = map_list_to_attributes(cred_data, columns)
+  print(creds)
+  return creds
 
 async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
@@ -126,15 +137,13 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
   access_token = create_access_token(data, expiry)
   return {"access_token": access_token, "token_type":"bearer"}
 
-@app.get("/users/config", response_model=UserOut)
+@app.get("/users/self", response_model=UserOut)
 async def read_me(current_user: Annotated[UserInDB, Depends(process_token)]):
    return current_user
 
-
 @app.get("/")
-async def read_root():
+async def read_root_test(): #here just for debugging incase needed
   return {"message": "Server is operational"}
-
 
 @app.get("/users/getAll")
 async def getall():
@@ -142,21 +151,31 @@ async def getall():
     return conn.execute(f"SELECT * FROM users").fetchall()
 
 @app.post("/creds/addCred")
-async def addCred(cred: Annotated[Credential, Depends(process_token)]):
+async def addCred(cred: Credential, current_user: Annotated[Credential, Depends(process_token)]):
   with sqlite3.connect("users.db") as conn:
-    conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{cred.uid}','{cred.site}','{cred.email}','{cred.username}',{cred.password},{cred.date_added})")
+    conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{current_user.uid}','{cred.site}','{cred.email}','{cred.username}','{cred.password}','{cred.date_added}',{0};)")
     conn.commit()
   return {"response": "success", "username": cred.username, "site": cred.site}
 
 @app.get("/creds/getCreds")
-async def getCreds(current_user: Annotated[UserIn, Depends(process_token)]):
-  with sqlite3.connect("users.db") as conn:
-    creds = conn.execute(f"SELECT * FROM credentials WHERE uid = '{current_user.uid}'").fetchall()
-  return convert_credslist_to_json(creds)
+async def getActiveCreds(current_user: Annotated[UserIn, Depends(process_token)]):
+  return get_creds(current_user, 0)
+
+@app.get("/cred/getOldCreds")
+async def getOldCreds(current_user: Annotated[UserIn, Depends(process_token)]):
+  return get_creds(current_user, 1)
+
+@app.put("/creds/modifyCred")
+async def modifyCred(updCred: Credential, current_user: Annotated[UserIn, Depends(process_token)]):
+   with sqlite3.connect('users.db') as conn:
+      conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password}' WHERE credid='{updCred.credid}';")
+   return {'message': 'success', 'cred_updated': updCred.credid, 'new_data': updCred.model_dump_json()}
 
 @app.delete("/creds/delCred")
-async def delCred():
-   pass # to work on soon
+async def delCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
+   with sqlite3.connect('users.db') as conn:
+      conn.execute(f"UPDATE credentials SET old={1} WHERE credid='{credid}';")
+   return {'message': 'success', 'cred_removed': credid}
 
 @app.get("/cleardb")
 async def cleardb():

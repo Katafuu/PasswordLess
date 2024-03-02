@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <title>Modify Existing Credentials</title>
+  <meta charset="utf-8" /> 
+  <meta name="viewport" content="width=device-width,initial-scale=3" />
+  <link rel="stylesheet" href="css/addModifyPwds.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <script src="scripts/addModifyPwds.js"></script>
+</head>
+
+<body>
+  <div id="page">
+    <div id="box">
+      <form id="modifyForm" method="PUT" action="https://passwordless.duckdns.org:8000/creds/modifyCred">
+        <input id = "site" name = "Website" placeholder="Website">
+        <input id = "email" name = "Email Address" placeholder="Email">
+        <input id = "username" name = "Username" placeholder="Username">
+        <input id = "password" name = "Password" placeholder="Password">
+      </form>
+    </div>
+  </div>
+</body>
+</html>
