@@ -22,17 +22,25 @@ class UserOut(UserBase):
    pass
 
 
-
-
-class Credential(BaseModel):
+class CredentialBase(BaseModel):
   credid: Optional[UUID] = Field(default_factory=uuid4)
-  uid: Optional[str] = None
   site: Optional[str] = "null"
   username: Optional[str] = "null"
   email: Optional[str] = "null"
   password: str
   date_added: Optional[str] = Field(default_factory=get_date)
-  old: Optional[int] = 0
+  
+
+class CredentialInDB(CredentialBase):
+  uid: Optional[str] = None
+
+class CredentialOut(CredentialBase):
+  pass
+
+
+class oldCredential(CredentialBase):
+  oldcred_uid: Optional[str] = Field(default_factory=uuid4)
+  date_removed: Optional[str] = Field(default_factory=get_date)
 
 
 class decrypt_data(BaseModel):

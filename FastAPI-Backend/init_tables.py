@@ -19,9 +19,19 @@ def createtables():
                email VARCHAR(255),
                password VARCHAR(255) NOT NULL,
                date_added CHAR(8),
-               old BOOLEAN,
                FOREIGN KEY (uid) REFERENCES users (uid) 
 
+  );""")
+  crsr.execute("""CREATE TABLE IF NOT EXISTS old_credentials (
+               oldcred_uid CHAR(36) NOT NULL,
+               credid CHAR(36) NOT NULL,
+               site VARCHAR(255) NOT NULL,
+               username VARCHAR(255),
+               email VARCHAR(255),
+               password VARCHAR(255) NOT NULL,
+               date_added CHAR(8),
+               date_removed CHAR(8),
+               FOREIGN KEY (credid) REFERENCES credentials (cred) 
   );""")
   conn.commit()
   conn.close()

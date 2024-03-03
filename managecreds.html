@@ -6,30 +6,45 @@
   <title>Manage Passwords</title>
   <meta charset="utf-8" /> 
   <meta name="viewport" content="width=device-width,initial-scale=3" />
-  <link rel="stylesheet" href="css/modifypwds.css" />
+  <link rel="stylesheet" href="css/managecreds.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
-  <script src="scripts/managepwds.js"></script>
+  <script src="scripts/managecreds.js"></script>
 
 </head>
 
 <body>
   <h1>Manage your passwords</h1>
   <div id="page">
+    <img class="backButton" src="icons/backbutton.png" onclick="backWebpage()">
     <div class="box">
-    <input class="addBtn" type="button" placeholder="ADD NEW CREDENTIAL">
+    <button class="button addBtn" onclick="redirectAdd()">+</button>
     <input class="searchbox" type="text" placeholder="Search" onkeyup="updateCreds()">
-    
     <table id="credList">
     <thead>
       <tr>
         <th style="width:20%">Site URL</th>
-        <th style="width:30%">Email</th>
         <th style="width:10%">Username</th>
+        <th style="width:30%">Email</th>
         <th style="width:30%">Password</th>
-        <th style="width:10%">Date Added</th>
+        <th style="width:10%">Date Added<sub>DD/MM/YY</sub></th>
+        
       </tr>
     </thead>
-      <tbody>
+      <tbody id="credBody">
+        <tr>
+          <td>google.com</td>
+          <td>katafu@gmail.com</td>
+          <td>katafu</td>
+          <td>supersecretpassword</td>
+          <td>20/20/20</td>
+        </tr>
+        <tr>
+          <td>google.com</td>
+          <td>katafu@gmail.com</td>
+          <td>katafu</td>
+          <td>supersecretpassword</td>
+          <td>20/20/20</td>
+        </tr>
         <tr>
           <td>google.com</td>
           <td>katafu@gmail.com</td>

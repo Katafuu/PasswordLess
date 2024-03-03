@@ -1,0 +1,123 @@
+body{
+  margin: 0;
+  padding: 0;
+  background-color: #202020;
+  background-size: cover;
+  background-repeat: no-repeat;
+  font-family : Verdana,Tahoma, sans-serif;
+}
+
+h1,h2,h3{
+  color: whitesmoke;
+  text-align: center;
+  background-color: rgb(80, 80, 80);
+  border-radius: 10px;
+  padding: 15px;
+}
+p {
+  color:azure;
+  font-weight: bolder;
+}
+
+.box {
+  width: 90%;
+  background-color:rgba(20, 19, 19, 0.81);
+  padding: 20px;
+  margin: 2% auto 0;
+  text-align: center;
+  position: relative;
+  border-radius: 10px;
+}
+
+.searchbox {
+  border-radius: 5px;
+  border-style: hidden;
+}
+
+.button {
+  border: none;
+  color: black;
+  padding: 3px 10px;
+  margin: 2px 1px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 26px;
+  cursor: pointer;
+  transition-duration: 0.3s;
+  border-radius: 12px;
+}
+
+button:hover {
+  background-color: grey;
+  color: black;
+  border-radius: 30px;
+  border-color: white;
+}
+.delBtn {background-color: grey;color: white;}
+.modifyBtn {background-color: grey;border: 3px solid whitesmoke; color: whitesmoke}
+
+
+table, th, td{
+  border: 1px solid;
+  color: whitesmoke;
+  border-collapse: collapse;
+  width: auto;
+  font-size: larger;
+}
+
+th, td {
+  padding: 10px;
+
+}
+
+
+td {
+  background-color: aliceblue;
+  background-repeat: repeat;
+  color: black;
+  font-family: sans-serif;
+}
+
+sub {
+  font-size: xx-small;
+  color:#9b9898;
+  display: block;
+}
+
+.searchbox {
+  width: 60%;
+  height: 35px;
+  font-size: larger;
+  background-image: url(../icons/icon-128.png);
+  background-position: 10px 12px;
+  background-repeat: no-repeat;
+  
+}
+
+a, a:hover, a:visited, a:link, a:active{
+    text-decoration: none;
+}
+
+#credList {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 100px;
+  text-align: center;
+}
+
+th {
+  width:auto;
+  text-align: center;
+  font-family: sans-serif;
+  font-size:115% ;
+}
+
+.backButton {
+  width: 50px
+}
+
+.icon {
+  width: 200px;
+  margin-top: -70px;
+}

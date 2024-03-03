@@ -12,7 +12,7 @@ function getCookieToken() {
 };
 
 if (getCookieToken()) {
-  location.replace('https://passwordless.duckdns.org/managepwds.html')
+  location.replace('https://passwordless.duckdns.org/managecreds.html')
 }
 else {
   location.replace('https://passwordless.duckdns.org/loginsignup.html')

@@ -6,6 +6,7 @@
   <title>Add A New Credential</title>
   <meta charset="utf-8" /> 
   <meta name="viewport" content="width=device-width,initial-scale=3" />
+  <link rel="stylesheet" href="css/managecreds.css" />
   <link rel="stylesheet" href="css/addModifyPwds.css" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   <script src="scripts/addModifyPwds.js"></script>
@@ -13,13 +14,16 @@
 
 <body>
   <div id="page">
-    <div id="box">
+    <img class="backButton" src="icons/backbutton.png" onclick="history.back()">
+    <div class="box">
+      <img class="icon" src="icons/icon-128.png">
+      <h1>Add a New Credential Manually</h1>
       <form id="addForm" method="POST" action="https://passwordless.duckdns.org:8000/creds/addCred">
-        <input id = "site" name = "Website" placeholder="Website">
-        <input id = "email" name = "Email Address" placeholder="Email">
-        <input id = "username" name = "Username" placeholder="Username">
-        <input id = "password" name = "Password" placeholder="Password">
-        <input type="submit", value="ADD">
+        <input type="text" id = "site" name = "Website" placeholder="Website">
+        <input type="text" id = "email" name = "Email Address" placeholder="Email">
+        <input type="text" id = "username" name = "Username" placeholder="Username">
+        <input type="text" id = "password" name = "Password" placeholder="Password">
+        <input type="submit", value="Add">
       </form>
     </div>
   </div>

@@ -13,7 +13,7 @@ $(window).trigger("hashchange");
 
 function setToken(token) {
   const d = new Date();
-  d.setTime(d.getTime()+30*60*1000)  // 30 mins expiry
+  d.setTime(d.getTime()+60*60*1000)  // 60 mins expiry
   document.cookie = "token="+token + ";expires="+d.toUTCString() + ";path=/";
 };
 

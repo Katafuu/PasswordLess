@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 import sqlite3
 import json
 from datetime import timedelta, datetime, timezone
-from models import UserInDB, UserIn, UserOut, Credential, Token, decrypt_data
+from models import UserInDB, UserIn, UserOut, CredentialBase, CredentialInDB, CredentialOut, oldCredential, Token, decrypt_data
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse
 
 SECRET_KEY = "5b0cebd0127a1eb2b06333f7dd133e69686b36fab502ba8c0225a20e7c0b6330"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 10
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/getToken",scheme_name="JWT")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
@@ -57,45 +57,53 @@ def authenticate_user(email: str, password: str):
     return user
 
 
-def map_list_to_attributes(lst, attrs):
-   result = []
-   for user in lst:
-    kwargs = dict(zip(attrs,user))
-    result.append(kwargs)
-   return result
+def map_list_to_dbattributes(lstitem: list, attrs: list, model):
+  kwargs = dict(zip(attrs,lstitem))
+  mapped = model(**kwargs)
+  return mapped
 
-def convert_list_to_userindbmodel(data: list):
-  fields = UserInDB.model_fields
+def map_list_to_model(data: list, model):
+  fields = model.model_fields
   kwargs = dict(zip(fields,data))
   return UserInDB(**kwargs)
 
-def get_user_by_uid(uid):
+def get_user_by_uid(uid: str):
   with sqlite3.connect("users.db") as conn:
     try:
       user = conn.execute(f"SELECT * FROM users WHERE uid = '{uid}'").fetchone()
-      user = convert_list_to_userindbmodel(user)
+      user = map_list_to_model(user, UserInDB)
       return user
     except:
       return None
 
-def get_user_by_email(email):
+def get_user_by_email(email: str):
   with sqlite3.connect("users.db") as conn:
     try:
       user = conn.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
-      user = convert_list_to_userindbmodel(user)
-      print(user)
+      user = map_list_to_model(user, UserInDB)
       return user
     except:
       return None
 
-def get_creds(current_user: UserIn, oldBOOL: int):
+def get_creds(current_user: UserIn):
   with sqlite3.connect('users.db') as conn:
     cursor = conn.cursor()
-    cred_data = cursor.execute(f"SELECT * FROM credentials WHERE uid='{current_user.uid}' AND old={oldBOOL};").fetchall()
+    cred_data = cursor.execute(f"SELECT * FROM credentials WHERE uid='{current_user.uid}';").fetchall()
     columns = [x[0] for x in cursor.description]
-    creds = map_list_to_attributes(cred_data, columns)
-  print(creds)
+    creds = []
+    for cred in cred_data:
+       creds.append(map_list_to_dbattributes(cred, columns, CredentialInDB))
   return creds
+
+def get_old_creds_bycredid(credid: str):
+   with sqlite3.connect('users.db') as conn:
+    cursor = conn.cursor()
+    cred_data = cursor.execute(f"SELECT * FROM old_credentials WHERE credid='{credid}';").fetchall()
+    columns = [x[0] for x in cursor.description]
+    creds = []
+    for cred in cred_data:
+      creds.append(map_list_to_dbattributes(cred, columns, oldCredential))
+   return creds
 
 async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
@@ -114,15 +122,7 @@ async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
     return user
-
-@app.post("/users/addUser", status_code=201) #create new user account
-async def add_user(user: UserIn):
-  user.password = hash_password(user.password)
-  with sqlite3.connect("users.db") as conn:
-    conn.execute(f"INSERT INTO users VALUES('{user.uid}','{user.email}','{user.username}','{user.date_created}','{user.password}')")
-    conn.commit()
-    return {"message":f"user{user.uid}successfully added", "name":{user.username}}
-
+#------------------------------------------------------- endpoint start, utility end
 @app.post("/getToken")
 async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
   user = authenticate_user(form_data.username, form_data.password)
@@ -137,52 +137,63 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
   access_token = create_access_token(data, expiry)
   return {"access_token": access_token, "token_type":"bearer"}
 
+@app.post("/users/addUser", status_code=201) #create new user account
+async def add_user(user: UserIn):
+  user.password = hash_password(user.password)
+  with sqlite3.connect("users.db") as conn:
+    conn.execute(f"INSERT INTO users VALUES('{user.uid}','{user.email}','{user.username}','{user.date_created}','{user.password}')")
+    conn.commit()
+    return {"message":f"user with id: {user.uid} - successfully added", "name":{user.username}}
+
 @app.get("/users/self", response_model=UserOut)
 async def read_me(current_user: Annotated[UserInDB, Depends(process_token)]):
    return current_user
 
-@app.get("/")
-async def read_root_test(): #here just for debugging incase needed
-  return {"message": "Server is operational"}
-
-@app.get("/users/getAll")
+@app.get("/users/getAll") # remove in final ver
 async def getall():
   with sqlite3.connect('users.db') as conn:
     return conn.execute(f"SELECT * FROM users").fetchall()
 
+@app.get("/creds/getCreds")
+async def getActiveCreds(current_user: Annotated[UserIn, Depends(process_token)]):
+  return get_creds(current_user)
+
+@app.get("/cred/getOldCreds")
+async def getOldCreds(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
+  return get_old_creds_bycredid(credid)
+
 @app.post("/creds/addCred")
-async def addCred(cred: Credential, current_user: Annotated[Credential, Depends(process_token)]):
+async def addCred(cred: CredentialInDB, current_user: Annotated[UserIn, Depends(process_token)]):
   with sqlite3.connect("users.db") as conn:
-    conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{current_user.uid}','{cred.site}','{cred.email}','{cred.username}','{cred.password}','{cred.date_added}',{0};)")
+    conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{current_user.uid}','{cred.site}','{cred.username}','{cred.email}','{cred.password}','{cred.date_added}');")
     conn.commit()
   return {"response": "success", "username": cred.username, "site": cred.site}
 
-@app.get("/creds/getCreds")
-async def getActiveCreds(current_user: Annotated[UserIn, Depends(process_token)]):
-  return get_creds(current_user, 0)
-
-@app.get("/cred/getOldCreds")
-async def getOldCreds(current_user: Annotated[UserIn, Depends(process_token)]):
-  return get_creds(current_user, 1)
-
 @app.put("/creds/modifyCred")
-async def modifyCred(updCred: Credential, current_user: Annotated[UserIn, Depends(process_token)]):
+async def modifyCred(updCred: oldCredential, current_user: Annotated[UserIn,  Depends(process_token)]):
    with sqlite3.connect('users.db') as conn:
-      conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password}' WHERE credid='{updCred.credid}';")
-   return {'message': 'success', 'cred_updated': updCred.credid, 'new_data': updCred.model_dump_json()}
+      added_date = conn.execute(f"SELECT date_added FROM credentials WHERE credid = {updCred.credid}").fetchone()
+      conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password}', date_added='{updCred.date_added}' WHERE credid='{updCred.credid}';")
+      conn.execute(f"INSERT INTO old_credentials VALUES('{updCred.oldcred_uid}','{updCred.credid}','{updCred.site}','{updCred.username}','{updCred.email}','{updCred.password}','{added_date}','{updCred.date_added}');")
+   return {'message': 'success', 'cred_updated': updCred.credid, 'new_data': updCred.model_dump_json(), 'original_added_date' :added_date}
 
 @app.delete("/creds/delCred")
 async def delCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
    with sqlite3.connect('users.db') as conn:
-      conn.execute(f"UPDATE credentials SET old={1} WHERE credid='{credid}';")
+      cursor = conn.cursor()
+      cred_data = cursor.execute(f"SELECT * FROM credentials WHERE credid='{credid}';").fetchone()
+      columns = [x[0] for x in cursor.description]
+      oldCred = map_list_to_dbattributes(cred_data, columns, oldCredential)
+      conn.execute(f"DELETE FROM credentials WHERE credid = '{credid}';")
+      conn.execute(f"INSERT INTO old_credentials VALUES('{oldCred.oldcred_uid}','{oldCred.credid}','{oldCred.site}','{oldCred.username}','{oldCred.email}','{oldCred.password}','{oldCred.date_added}','{datetime.now().strftime('%x')}');")
    return {'message': 'success', 'cred_removed': credid}
 
-@app.get("/cleardb")
-async def cleardb():
-  with sqlite3.connect("users.db") as conn:
-    conn.execute(f"DELETE FROM users")
-    conn.commit()
-  return("successfully cleared db")
+@app.delete("/creds/delOldCred")
+async def delOldCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
+   with sqlite3.connect('users.db') as conn:
+      conn.execute(f"DELETE FROM old_credentials WHERE oldcred_uid = '{credid}';")
+   return {'message': 'success', 'cred_removed': credid}
+
 
 @app.post("/encrypt")
 async def AES_encrypt(data: str):
