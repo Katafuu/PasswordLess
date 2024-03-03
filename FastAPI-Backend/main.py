@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 import sqlite3
 import json
 from datetime import timedelta, datetime, timezone
@@ -170,12 +170,14 @@ async def addCred(cred: CredentialInDB, current_user: Annotated[UserIn, Depends(
   return {"response": "success", "username": cred.username, "site": cred.site}
 
 @app.put("/creds/modifyCred")
-async def modifyCred(updCred: oldCredential, current_user: Annotated[UserIn,  Depends(process_token)]):
+async def modifyCred(request: Request, current_user: Annotated[UserIn,  Depends(process_token)]):
+   body = await request.json()
+   updCred = oldCredential(**body)
    with sqlite3.connect('users.db') as conn:
-      added_date = conn.execute(f"SELECT date_added FROM credentials WHERE credid = {updCred.credid}").fetchone()
+      added_date = conn.execute(f"SELECT date_added FROM credentials WHERE credid = '{updCred.credid}';").fetchone()[0]
       conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password}', date_added='{updCred.date_added}' WHERE credid='{updCred.credid}';")
       conn.execute(f"INSERT INTO old_credentials VALUES('{updCred.oldcred_uid}','{updCred.credid}','{updCred.site}','{updCred.username}','{updCred.email}','{updCred.password}','{added_date}','{updCred.date_added}');")
-   return {'message': 'success', 'cred_updated': updCred.credid, 'new_data': updCred.model_dump_json(), 'original_added_date' :added_date}
+   return {'message': 'success'}
 
 @app.delete("/creds/delCred")
 async def delCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):

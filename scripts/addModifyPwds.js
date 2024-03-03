@@ -34,17 +34,19 @@ function addCred() {
 	fetch("https://passwordless.duckdns.org:8000/creds/addCred",options)
 		.then(res => res.json())
 		.then(d => {alert(JSON.stringify(d))});
-	// window.location.href = "/"
+	window.location.href = "/"
 };
 
-function modifyCred() {
+function modifyCred(id) {
+	const token = getCookieToken();
 	const options = {
 		method: 'PUT',
 		headers: {
 				'Authorization':
-						getCookieToken()
+						'Bearer '+token
 		},
 		body: JSON.stringify({
+			credid: id,
       site: document.getElementById("site").value,
 			email: document.getElementById("email").value,
 			username: document.getElementById("username").value,
@@ -75,7 +77,7 @@ $(document).ready(function () {
 		document.getElementById('password').value = searchParams.get('pwd');
 		$("#modifyForm").submit(function (event) {
 			event.preventDefault();
-			modifyCred();
+			modifyCred(searchParams.get('credid'));
 		})
     }}
 );

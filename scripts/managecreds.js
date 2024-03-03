@@ -29,6 +29,7 @@ function addTblRecord(tblid, json_data) {
   const tbl_rec = credList.insertRow(-1);
 	const ID = json_data['credid'];
 	delete json_data.credid;
+	delete json_data.uid;
 
   for(const key in json_data) { // adding data to tblrec element
 		const tbl_dat = document.createElement('td');
@@ -110,7 +111,7 @@ $(document).ready(function(){
 	.then(data => data.json())
 	.then(function(data) {
 		console.log(data)
-	  // clearElement("credBody")
+	  clearElement("credBody")
     for(let i = 0; i < data.length; i++) {
     	addTblRecord('credList',data[i]);
   	};
