@@ -74,7 +74,6 @@ $(document).ready(function () {
 		document.getElementById('site').value = searchParams.get('site');
 		document.getElementById('email').value = searchParams.get('email');
 		document.getElementById('username').value = searchParams.get('username');
-		document.getElementById('password').value = searchParams.get('pwd');
 		$("#modifyForm").submit(function (event) {
 			event.preventDefault();
 			modifyCred(searchParams.get('credid'));

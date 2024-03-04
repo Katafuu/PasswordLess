@@ -34,7 +34,7 @@ app.add_middleware(
 
 
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)  # returns True or False by hashing the plain pass then comparing with the hashed pass
+   return pwd_context.verify(plain_password, hashed_password)  # returns True or False by hashing the plain pass then comparing with the hashed pass
 
 def hash_password(password):
    return pwd_context.hash(password)
@@ -57,32 +57,34 @@ def authenticate_user(email: str, password: str):
     return user
 
 
-def map_list_to_dbattributes(lstitem: list, attrs: list, model):
+def map_list_to_model(lstitem, attrs: list, model):
   kwargs = dict(zip(attrs,lstitem))
   mapped = model(**kwargs)
   return mapped
 
-def map_list_to_model(data: list, model):
-  fields = model.model_fields
-  kwargs = dict(zip(fields,data))
-  return UserInDB(**kwargs)
-
 def get_user_by_uid(uid: str):
   with sqlite3.connect("users.db") as conn:
     try:
-      user = conn.execute(f"SELECT * FROM users WHERE uid = '{uid}'").fetchone()
-      user = map_list_to_model(user, UserInDB)
+      cursor = conn.cursor()
+      user = cursor.execute(f"SELECT * FROM users WHERE uid = '{uid}'").fetchone()
+      attributes = [x[0] for x in cursor.description]
+      user = map_list_to_model(user, attributes, UserInDB)
       return user
     except:
       return None
 
+
+
 def get_user_by_email(email: str):
   with sqlite3.connect("users.db") as conn:
     try:
-      user = conn.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
-      user = map_list_to_model(user, UserInDB)
+      cursor = conn.cursor()
+      user = cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
+      attributes = [x[0] for x in cursor.description]
+      user = map_list_to_model(user, attributes, UserInDB)
       return user
-    except:
+    except Exception as e:
+      print(e)
       return None
 
 def get_creds(current_user: UserIn):
@@ -92,7 +94,7 @@ def get_creds(current_user: UserIn):
     columns = [x[0] for x in cursor.description]
     creds = []
     for cred in cred_data:
-       creds.append(map_list_to_dbattributes(cred, columns, CredentialInDB))
+       creds.append(map_list_to_model(cred, columns, CredentialInDB))
   return creds
 
 def get_old_creds_bycredid(credid: str):
@@ -102,7 +104,7 @@ def get_old_creds_bycredid(credid: str):
     columns = [x[0] for x in cursor.description]
     creds = []
     for cred in cred_data:
-      creds.append(map_list_to_dbattributes(cred, columns, oldCredential))
+      creds.append(map_list_to_model(cred, columns, oldCredential))
    return creds
 
 async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -125,7 +127,7 @@ async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
 #------------------------------------------------------- endpoint start, utility end
 @app.post("/getToken")
 async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-  user = authenticate_user(form_data.username, form_data.password)
+  user = authenticate_user(form_data.username.lower(), form_data.password)
   if not user:
      raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -141,7 +143,7 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
 async def add_user(user: UserIn):
   user.password = hash_password(user.password)
   with sqlite3.connect("users.db") as conn:
-    conn.execute(f"INSERT INTO users VALUES('{user.uid}','{user.email}','{user.username}','{user.date_created}','{user.password}')")
+    conn.execute(f"INSERT INTO users VALUES('{user.uid}','{user.email.lower()}','{user.username}','{user.date_created}','{user.password}')")
     conn.commit()
     return {"message":f"user with id: {user.uid} - successfully added", "name":{user.username}}
 
@@ -149,34 +151,41 @@ async def add_user(user: UserIn):
 async def read_me(current_user: Annotated[UserInDB, Depends(process_token)]):
    return current_user
 
-@app.get("/users/getAll") # remove in final ver
-async def getall():
-  with sqlite3.connect('users.db') as conn:
-    return conn.execute(f"SELECT * FROM users").fetchall()
-
 @app.get("/creds/getCreds")
 async def getActiveCreds(current_user: Annotated[UserIn, Depends(process_token)]):
   return get_creds(current_user)
 
-@app.get("/cred/getOldCreds")
+@app.get("/creds/getOldCreds")
 async def getOldCreds(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
   return get_old_creds_bycredid(credid)
 
 @app.post("/creds/addCred")
 async def addCred(cred: CredentialInDB, current_user: Annotated[UserIn, Depends(process_token)]):
   with sqlite3.connect("users.db") as conn:
-    conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{current_user.uid}','{cred.site}','{cred.username}','{cred.email}','{cred.password}','{cred.date_added}');")
-    conn.commit()
+    exists = conn.execute(f"SELECT * FROM credentials WHERE (uid='{current_user.uid}' AND site='{cred.site}') AND (email='{cred.email}' OR username='{cred.username}')").fetchone()
+    if exists:
+       return {"message": "error, already exists"}
+    else:
+      conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{current_user.uid}','{cred.site}','{cred.username}','{cred.email}','{cred.password}','{cred.date_added}');")
+      conn.commit()
   return {"response": "success", "username": cred.username, "site": cred.site}
 
 @app.put("/creds/modifyCred")
 async def modifyCred(request: Request, current_user: Annotated[UserIn,  Depends(process_token)]):
    body = await request.json()
-   updCred = oldCredential(**body)
+   updCred = CredentialInDB(**body)
    with sqlite3.connect('users.db') as conn:
-      added_date = conn.execute(f"SELECT date_added FROM credentials WHERE credid = '{updCred.credid}';").fetchone()[0]
-      conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password}', date_added='{updCred.date_added}' WHERE credid='{updCred.credid}';")
-      conn.execute(f"INSERT INTO old_credentials VALUES('{updCred.oldcred_uid}','{updCred.credid}','{updCred.site}','{updCred.username}','{updCred.email}','{updCred.password}','{added_date}','{updCred.date_added}');")
+      cursor = conn.cursor()
+      oldCred = cursor.execute(f"SELECT * FROM credentials WHERE credid='{updCred.credid}'").fetchone()
+      columns = [x[0] for x in cursor.description]
+      oldCred = map_list_to_model(oldCred, columns, oldCredential)
+      identical = oldCred.site == updCred.site and oldCred.email == updCred.email and oldCred.username == updCred.username and oldCred.password == oldCred.password
+      if identical:
+         return {"message": "no changes made"}
+      else:
+        conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password}', date_added='{updCred.date_added}' WHERE credid='{updCred.credid}';")
+        conn.execute(f"INSERT INTO old_credentials VALUES('{oldCred.oldcred_uid}','{oldCred.credid}','{oldCred.site}','{oldCred.username}','{oldCred.email}','{oldCred.password}','{oldCred.date_added}','{updCred.date_added}');")
+        conn.commit()
    return {'message': 'success'}
 
 @app.delete("/creds/delCred")
@@ -185,15 +194,17 @@ async def delCred(credid: str, current_user: Annotated[UserIn, Depends(process_t
       cursor = conn.cursor()
       cred_data = cursor.execute(f"SELECT * FROM credentials WHERE credid='{credid}';").fetchone()
       columns = [x[0] for x in cursor.description]
-      oldCred = map_list_to_dbattributes(cred_data, columns, oldCredential)
+      oldCred = map_list_to_model(cred_data, columns, oldCredential)
       conn.execute(f"DELETE FROM credentials WHERE credid = '{credid}';")
       conn.execute(f"INSERT INTO old_credentials VALUES('{oldCred.oldcred_uid}','{oldCred.credid}','{oldCred.site}','{oldCred.username}','{oldCred.email}','{oldCred.password}','{oldCred.date_added}','{datetime.now().strftime('%x')}');")
+      conn.commit()
    return {'message': 'success', 'cred_removed': credid}
 
 @app.delete("/creds/delOldCred")
 async def delOldCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
    with sqlite3.connect('users.db') as conn:
       conn.execute(f"DELETE FROM old_credentials WHERE oldcred_uid = '{credid}';")
+      conn.commit()
    return {'message': 'success', 'cred_removed': credid}
 
 

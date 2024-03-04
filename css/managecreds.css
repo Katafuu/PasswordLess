@@ -54,8 +54,17 @@ button:hover {
   border-radius: 30px;
   border-color: white;
 }
-.delBtn {background-color: grey;color: white;}
-.modifyBtn {background-color: grey;border: 3px solid whitesmoke; color: whitesmoke}
+.delBtn {background-color: grey; border:0px; padding: 15px}
+.modifyBtn {background-color: grey; border:0px; padding: 15px}
+.viewHistoryBtn {background-color: grey; border:0px; padding: 15px}
+
+
+#credList {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 100px;
+  text-align: center;
+}
 
 
 table, th, td{
@@ -65,12 +74,15 @@ table, th, td{
   width: auto;
   font-size: larger;
 }
-
+th {
+  width:auto;
+  text-align: center;
+  font-family: sans-serif;
+  font-size:115% ;
+}
 th, td {
   padding: 10px;
-
 }
-
 
 td {
   background-color: aliceblue;
@@ -79,6 +91,17 @@ td {
   font-family: sans-serif;
 }
 
+.tblBtn {
+  background-color: transparent;
+  border-radius: 6px;
+  border: 0px;
+  padding: 0px;
+  margin: 0px;
+}
+.tblBtn:hover {
+  border-radius: 5px;
+  transition-duration: 0.4s;
+}
 sub {
   font-size: xx-small;
   color:#9b9898;
@@ -99,19 +122,7 @@ a, a:hover, a:visited, a:link, a:active{
     text-decoration: none;
 }
 
-#credList {
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 100px;
-  text-align: center;
-}
 
-th {
-  width:auto;
-  text-align: center;
-  font-family: sans-serif;
-  font-size:115% ;
-}
 
 .backButton {
   width: 50px
@@ -121,3 +132,4 @@ th {
   width: 200px;
   margin-top: -70px;
 }
+

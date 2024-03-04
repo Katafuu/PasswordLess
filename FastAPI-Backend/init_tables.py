@@ -31,7 +31,7 @@ def createtables():
                password VARCHAR(255) NOT NULL,
                date_added CHAR(8),
                date_removed CHAR(8),
-               FOREIGN KEY (credid) REFERENCES credentials (cred) 
+               FOREIGN KEY (credid) REFERENCES credentials (credid) 
   );""")
   conn.commit()
   conn.close()

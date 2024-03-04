@@ -4,48 +4,35 @@ function setAttributes(element, attributes) { // https://bobbyhadz.com/blog/java
 	});
 };
 function addTblRecord(tblid, json_data) {
-  function addTblRecord(tblid, json_data) {
-    const credList = document.getElementById(tblid);
-    const tbl_rec = credList.insertRow(-1);
-    const ID = json_data['credid'];
-    delete json_data.credid;
-  
-    for(const key in json_data) { // adding data to tblrec element
-      const tbl_dat = document.createElement('td');
-      if(key == 'password') {
-        tbl_dat.setAttribute('class','pwd')
-      };
-      tbl_dat.innerText = json_data[key];
-      tbl_rec.appendChild(tbl_dat);
-    };
-    const delBtn_dat = document.createElement('td');
-    const modifyBtn_dat = document.createElement('td');
+  const credList = document.getElementById(tblid);
+  const tbl_rec = credList.insertRow(-1);
+  const ID = json_data['oldcred_uid'];
+  delete json_data.credid;
+  delete json_data.oldcred_uid;
 
-    const delBtn = document.createElement('button');
-    const modifyBtn = document.createElement('button');
-
-    modifyBtn.innerText = '~';
-    modifyBtn.title = "Modfy Credential"
-    delBtn.innerText = '-';
-    delBtn.title = "Delete Credential"
-    const attributes = {
-      'class': 'delBtn',
-      'id': ID
+  for(const key in json_data) { // adding data to tblrec element
+    const tbl_dat = document.createElement('td');
+    if(key == 'password') {
+      tbl_dat.setAttribute('class','pwd')
     };
-    setAttributes(delBtn, attributes);
-    attributes['class'] = 'tblBtn modifyBtn';
-    setAttributes(modifyBtn, attributes)
-  
-  
-    delBtn_dat.appendChild(delBtn)
-    modifyBtn_dat.appendChild(modifyBtn)
-  
-    tbl_rec.appendChild(delBtn_dat)
-    tbl_rec.appendChild(modifyBtn_dat)
-    tbl_rec.appendChild(viewHistoryBtn_dat)
-    credList.appendChild(tbl_rec);
+    tbl_dat.innerText = json_data[key];
+    tbl_rec.appendChild(tbl_dat);
   };
-}
+  const delBtn_dat = document.createElement('td');
+  const delBtn = document.createElement('button');
+
+  delBtn.innerText = '-';
+  delBtn.title = "Delete Credential"
+  const attributes = {
+    'class': 'delBtn',
+    'id': ID
+  };
+  setAttributes(delBtn, attributes);
+  delBtn_dat.setAttribute('class', 'tblBtn')
+  delBtn_dat.appendChild(delBtn)
+  tbl_rec.appendChild(delBtn_dat)
+  credList.appendChild(tbl_rec);
+};
 function delCred(id) {
 	const token = getCookieToken();
 	const options = {
@@ -63,18 +50,36 @@ function delCred(id) {
 		};
 	});
 };
-
+function getCookieToken() {
+	let cookies = document.cookie.split(';');
+	for(let i = 0; i < cookies.length; i++) {
+	  cookies[i] = cookies[i].split('=')
+	};
+	for (let x = 0; x < cookies.length; x++){
+	  if (cookies[x][0] == 'token') {
+		  return cookies[x][1];
+	  }
+    else {
+      return null
+    };
+	};
+};
+function clearElement(id) {
+	const element = document.getElementById(id);
+	element.innerHTML = '';
+}
 $(document).ready(function() {
   const searchParams = new URLSearchParams(window.location.search);
   const credid = searchParams.get("credid");
   const token = getCookieToken();
-	if(!token) {
+  if(!token) {
 		window.location.href = "/loginsignup.html?created=SessionTimeOut"
 	};
-	const headers = {'Authorization': 'Bearer '+token}
+	const headers = {'Authorization': 'Bearer '+token};
 	fetch("https://passwordless.duckdns.org:8000/creds/getOldCreds?credid="+credid, {headers})
 	.then(data => data.json())
 	.then(function(data) {
+    console.log(data)
 	  clearElement("credBody")
     for(let i = 0; i < data.length; i++) {
     	addTblRecord('credList',data[i]);

@@ -44,31 +44,49 @@ function addTblRecord(tblid, json_data) {
 	const viewHistoryBtn_dat = document.createElement('td');
 	const delBtn = document.createElement('button');
 	const modifyBtn = document.createElement('button');
-	const viewHistoryBtn = document.createElement('button')
-	viewHistoryBtn.innerText = "ˇ"
-	viewHistoryBtn.title = "View Credential History"
-	modifyBtn.innerText = '~';
-	modifyBtn.title = "Modfy Credential"
-	delBtn.innerText = '-';
-	delBtn.title = "Delete Credential"
+	const viewHistoryBtn = document.createElement('button');
+	// viewHistoryBtn.innerText = "ˇ";
+	viewHistoryBtn.title = "View Credential History";
+	// modifyBtn.innerText = '~';
+	modifyBtn.title = "Modfy Credential";
+	// delBtn.innerText = '-';
+	delBtn.title = "Delete Credential";
+	const delBtn_icon = document.createElement('i');
+	const modifyBtn_icon = document.createElement('i');
+	const viewHistoryBtn_icon = document.createElement('i');
+	delBtn_icon.setAttribute('class',"fa fa-trash fa-xl");
+	modifyBtn_icon.setAttribute('class',"fa fa-pencil");
+	viewHistoryBtn_icon.setAttribute('class',"fa fa-eye");
+
+	delBtn.appendChild(delBtn_icon);
+	modifyBtn.appendChild(modifyBtn_icon);
+	viewHistoryBtn.appendChild(viewHistoryBtn_icon);
+
   const attributes = {
-		'class': 'delBtn',
+		'class': 'btn delBtn',
 		'id': ID
 	};
 	setAttributes(delBtn, attributes);
-	attributes['class'] = 'tblBtn modifyBtn';
-	setAttributes(modifyBtn, attributes)
-	attributes['class'] = 'tblBtn viewHistoryBtn'
-	setAttributes(viewHistoryBtn, attributes)
+	attributes['class'] = 'btn modifyBtn';
+	setAttributes(modifyBtn, attributes);
+	attributes['class'] = 'btn viewHistoryBtn';
+	setAttributes(viewHistoryBtn, attributes);
+
+	// delBtn_dat.setAttribute('class', 'tblBtn');
+	// modifyBtn_dat.setAttribute('class', 'tblBtn');
+	// viewHistoryBtn_dat.setAttribute('class', 'tblBtn');
 
 
-	delBtn_dat.appendChild(delBtn)
-	modifyBtn_dat.appendChild(modifyBtn)
-	viewHistoryBtn_dat.appendChild(viewHistoryBtn)
+	delBtn_dat.appendChild(delBtn);
+	modifyBtn_dat.appendChild(modifyBtn);
+	viewHistoryBtn_dat.appendChild(viewHistoryBtn);
 
-	tbl_rec.appendChild(delBtn_dat)
-	tbl_rec.appendChild(modifyBtn_dat)
-	tbl_rec.appendChild(viewHistoryBtn_dat)
+	viewHistoryBtn_dat.setAttribute('class','tblBtn');
+	delBtn_dat.setAttribute('class','tblBtn');
+	modifyBtn_dat.setAttribute('class','tblBtn');
+	tbl_rec.appendChild(viewHistoryBtn_dat);
+	tbl_rec.appendChild(modifyBtn_dat);
+	tbl_rec.appendChild(delBtn_dat);
   credList.appendChild(tbl_rec);
 };
 function redirectAdd() {
@@ -81,7 +99,7 @@ function redirectModify(btn) {
 	for (const value of data.values()) {
 		fillerValues.push(value.innerText)
 	}
-  window.location.href = './modifyCred.html?credid='+btn.id+"&site="+fillerValues[0]+'&username='+fillerValues[1]+'&email='+fillerValues[2]+'&pwd='+fillerValues[3]; // test/debug this, then this page will be basically done
+  window.location.href = './modifyCred.html?credid='+btn.id+"&site="+fillerValues[0]+'&username='+fillerValues[1]+'&email='+fillerValues[2]; // test/debug this, then this page will be basically done
 };
 function delCred(id) {
 	const token = getCookieToken();
@@ -104,7 +122,7 @@ function delCred(id) {
 $(document).ready(function(){
 	const token = getCookieToken();
 	if(!token) {
-		// window.location.href = "/loginsignup.html?created=SessionTimeOut"
+		window.location.href = "/loginsignup.html?created=SessionTimeOut"
 	};
 	const headers = {'Authorization': 'Bearer '+token}
 	fetch("https://passwordless.duckdns.org:8000/creds/getCreds", {headers})
@@ -130,7 +148,7 @@ $(document).ready(function(){
 		});
 		viewHistoryBtns.forEach(function(btn) {
 			btn.addEventListener('click', function() {
-				window.location.href = "/view?credid="+btn.id
+				window.location.href = "/view.html?credid="+btn.id
 			});
 		});
   });
