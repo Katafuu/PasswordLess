@@ -112,7 +112,7 @@ sub {
   width: 60%;
   height: 35px;
   font-size: larger;
-  background-image: url(../icons/icon-128.png);
+  background-image: url(./icon-128.png);
   background-position: 10px 12px;
   background-repeat: no-repeat;
   
@@ -121,7 +121,6 @@ sub {
 a, a:hover, a:visited, a:link, a:active{
     text-decoration: none;
 }
-
 
 
 .backButton {
@@ -133,3 +132,10 @@ a, a:hover, a:visited, a:link, a:active{
   margin-top: -70px;
 }
 
+.pwd {
+  display: hidden;
+  cursor: pointer;
+}
+.pwd:hover {
+  display: inline;
+}

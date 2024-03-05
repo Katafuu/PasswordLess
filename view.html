@@ -15,9 +15,9 @@
 <body>
   <h1>View and Delete password history</h1>
   <div id="page">
-    <img class="backButton" src="icons/backbutton.png" onclick="history.back()">
+    <img class="backButton" src="./backbutton.png" onclick="history.back()">
     <div class="box">
-    <input class="searchbox" type="text" placeholder="Search" onkeyup="updateCreds()"><!--  make refresh button rather than this to replace the search system -->
+    <button class="button refreshBtn fa fa-refresh fa-xl" onclick="updateCreds()"></button>
     <table id="credList">
     <thead>
       <tr>

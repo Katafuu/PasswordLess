@@ -1,15 +1,14 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Request
 import sqlite3
-import json
 from datetime import timedelta, datetime, timezone
-from models import UserInDB, UserIn, UserOut, CredentialBase, CredentialInDB, CredentialOut, oldCredential, Token, decrypt_data
+from models import UserInDB, UserIn, UserOut, CredentialIn, CredentialOut, CredentialInDB, oldCredential, encrypted_data
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pyaes256 import PyAES256
-from fastapi.responses import HTMLResponse
+import json
 
 SECRET_KEY = "5b0cebd0127a1eb2b06333f7dd133e69686b36fab502ba8c0225a20e7c0b6330"
 ALGORITHM = "HS256"
@@ -57,10 +56,9 @@ def authenticate_user(email: str, password: str):
     return user
 
 
-def map_list_to_model(lstitem, attrs: list, model):
+def map_list_to_dict(lstitem, attrs: list):
   kwargs = dict(zip(attrs,lstitem))
-  mapped = model(**kwargs)
-  return mapped
+  return kwargs
 
 def get_user_by_uid(uid: str):
   with sqlite3.connect("users.db") as conn:
@@ -68,7 +66,8 @@ def get_user_by_uid(uid: str):
       cursor = conn.cursor()
       user = cursor.execute(f"SELECT * FROM users WHERE uid = '{uid}'").fetchone()
       attributes = [x[0] for x in cursor.description]
-      user = map_list_to_model(user, attributes, UserInDB)
+      user = map_list_to_dict(user, attributes)
+      user = UserInDB(**user)
       return user
     except:
       return None
@@ -81,7 +80,8 @@ def get_user_by_email(email: str):
       cursor = conn.cursor()
       user = cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
       attributes = [x[0] for x in cursor.description]
-      user = map_list_to_model(user, attributes, UserInDB)
+      user = map_list_to_dict(user, attributes)
+      user = UserInDB(**user)
       return user
     except Exception as e:
       print(e)
@@ -94,7 +94,9 @@ def get_creds(current_user: UserIn):
     columns = [x[0] for x in cursor.description]
     creds = []
     for cred in cred_data:
-       creds.append(map_list_to_model(cred, columns, CredentialInDB))
+      cred = map_list_to_dict(cred, columns)
+      cred["password"] = json.loads(cred["password"])
+      creds.append(cred)
   return creds
 
 def get_old_creds_bycredid(credid: str):
@@ -104,7 +106,9 @@ def get_old_creds_bycredid(credid: str):
     columns = [x[0] for x in cursor.description]
     creds = []
     for cred in cred_data:
-      creds.append(map_list_to_model(cred, columns, oldCredential))
+      cred = map_list_to_dict(cred, columns)
+      cred["password"] = json.loads(cred["password"])
+      creds.append(cred)
    return creds
 
 async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -124,6 +128,19 @@ async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     if user is None:
         raise credentials_exception
     return user
+
+def AES_encrypt(data: str):
+  key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
+  ciphertext = PyAES256().encrypt(data,key)
+  print(f"CIPHER:  {ciphertext}")
+  return encrypted_data(**ciphertext)
+
+def AES_decrypt(data: encrypted_data):
+  key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
+  plaintext = PyAES256().decrypt(url=data.url, salt=data.salt, iv=data.iv, password=key)
+  plaintext = bytes.decode(plaintext)
+  return {"plaintext": plaintext}
+
 #------------------------------------------------------- endpoint start, utility end
 @app.post("/getToken")
 async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
@@ -160,30 +177,36 @@ async def getOldCreds(credid: str, current_user: Annotated[UserIn, Depends(proce
   return get_old_creds_bycredid(credid)
 
 @app.post("/creds/addCred")
-async def addCred(cred: CredentialInDB, current_user: Annotated[UserIn, Depends(process_token)]):
+async def addCred(cred: CredentialIn, current_user: Annotated[UserIn, Depends(process_token)]):
+  cred = cred.model_dump()
+  cred["password"] = AES_encrypt(cred["password"])
+  cred = CredentialInDB(**cred)
   with sqlite3.connect("users.db") as conn:
     exists = conn.execute(f"SELECT * FROM credentials WHERE (uid='{current_user.uid}' AND site='{cred.site}') AND (email='{cred.email}' OR username='{cred.username}')").fetchone()
     if exists:
        return {"message": "error, already exists"}
     else:
-      conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{current_user.uid}','{cred.site}','{cred.username}','{cred.email}','{cred.password}','{cred.date_added}');")
+      conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{current_user.uid}','{cred.site}','{cred.username}','{cred.email}','{cred.password.model_dump_json()}','{cred.date_added}');")
       conn.commit()
   return {"response": "success", "username": cred.username, "site": cred.site}
 
 @app.put("/creds/modifyCred")
 async def modifyCred(request: Request, current_user: Annotated[UserIn,  Depends(process_token)]):
    body = await request.json()
-   updCred = CredentialInDB(**body)
+   updCred = CredentialIn(**body)
    with sqlite3.connect('users.db') as conn:
       cursor = conn.cursor()
       oldCred = cursor.execute(f"SELECT * FROM credentials WHERE credid='{updCred.credid}'").fetchone()
       columns = [x[0] for x in cursor.description]
-      oldCred = map_list_to_model(oldCred, columns, oldCredential)
-      identical = oldCred.site == updCred.site and oldCred.email == updCred.email and oldCred.username == updCred.username and oldCred.password == oldCred.password
+      oldCred = oldCredential(**map_list_to_dict(oldCred, columns))
+      identical = oldCred.site == updCred.site and oldCred.email == updCred.email and oldCred.username == updCred.username and updCred.password == AES_decrypt(oldCred.password)
       if identical:
          return {"message": "no changes made"}
       else:
-        conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password}', date_added='{updCred.date_added}' WHERE credid='{updCred.credid}';")
+        updCred = updCred.model_dump()
+        updCred["password"] = AES_encrypt(updCred["password"])
+        updCred = CredentialInDB(**updCred)
+        conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password.model_dump_json()}', date_added='{updCred.date_added}' WHERE credid='{updCred.credid}';")
         conn.execute(f"INSERT INTO old_credentials VALUES('{oldCred.oldcred_uid}','{oldCred.credid}','{oldCred.site}','{oldCred.username}','{oldCred.email}','{oldCred.password}','{oldCred.date_added}','{updCred.date_added}');")
         conn.commit()
    return {'message': 'success'}
@@ -194,7 +217,7 @@ async def delCred(credid: str, current_user: Annotated[UserIn, Depends(process_t
       cursor = conn.cursor()
       cred_data = cursor.execute(f"SELECT * FROM credentials WHERE credid='{credid}';").fetchone()
       columns = [x[0] for x in cursor.description]
-      oldCred = map_list_to_model(cred_data, columns, oldCredential)
+      oldCred = oldCredential(**map_list_to_dict(cred_data, columns))
       conn.execute(f"DELETE FROM credentials WHERE credid = '{credid}';")
       conn.execute(f"INSERT INTO old_credentials VALUES('{oldCred.oldcred_uid}','{oldCred.credid}','{oldCred.site}','{oldCred.username}','{oldCred.email}','{oldCred.password}','{oldCred.date_added}','{datetime.now().strftime('%x')}');")
       conn.commit()
@@ -207,17 +230,11 @@ async def delOldCred(credid: str, current_user: Annotated[UserIn, Depends(proces
       conn.commit()
    return {'message': 'success', 'cred_removed': credid}
 
-
-@app.post("/encrypt")
-async def AES_encrypt(data: str):
-  key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
-  ciphertext = PyAES256().encrypt(data,key)
-  return ciphertext
-
-@app.post("/decrypt")
-def AES_decrypt(data: decrypt_data):
-  key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
-  plaintext = PyAES256().decrypt(url=data.url, salt=data.salt, iv=data.iv, password=key)
-  plaintext = bytes.decode(plaintext)
-  return {"plaintext": plaintext}
-
+@app.post("/creds/getDecryptPassword")
+async def getDecryptPwd(db: str, credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
+  with sqlite3.connect('users.db') as conn:
+    cursor = conn.cursor()
+    cred_data = cursor.execute(f"SELECT password FROM {db} WHERE credid='{credid}';").fetchone()
+    columns = [x[0] for x in cursor.description]
+    cred_data = map_list_to_dict(cred_data, columns)
+  return {credid: cred_data}

@@ -20,8 +20,8 @@ function addTblRecord(tblid, json_data) {
   };
   const delBtn_dat = document.createElement('td');
   const delBtn = document.createElement('button');
-
-  delBtn.innerText = '-';
+	const delBtn_icon = document.createElement('i');
+	delBtn_icon.setAttribute('class',"fa fa-trash fa-xl");
   delBtn.title = "Delete Credential"
   const attributes = {
     'class': 'delBtn',
@@ -68,6 +68,19 @@ function clearElement(id) {
 	const element = document.getElementById(id);
 	element.innerHTML = '';
 }
+function updateCreds(Creds) {
+	clearElement("credBody")
+	for(let i = 0; i < Creds.length; i++) {
+		addTblRecord('credBody',Creds[i]);
+	};
+	delBtns = document.querySelectorAll(".delBtn");
+	delBtns.forEach(function(btn) {
+		btn.addEventListener('click', function() {
+		delCred(btn.id)
+		});
+	});
+};
+
 $(document).ready(function() {
   const searchParams = new URLSearchParams(window.location.search);
   const credid = searchParams.get("credid");
@@ -79,16 +92,6 @@ $(document).ready(function() {
 	fetch("https://passwordless.duckdns.org:8000/creds/getOldCreds?credid="+credid, {headers})
 	.then(data => data.json())
 	.then(function(data) {
-    console.log(data)
-	  clearElement("credBody")
-    for(let i = 0; i < data.length; i++) {
-    	addTblRecord('credList',data[i]);
-  	};
-		delBtns = document.querySelectorAll(".delBtn");
-		delBtns.forEach(function(btn) {
-			btn.addEventListener('click', function() {
-				delCred(btn.id)
-			});
-		});
+    updateCreds(data)
   });
 });

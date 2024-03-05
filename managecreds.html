@@ -15,10 +15,10 @@
 <body>
   <h1>Manage your passwords</h1>
   <div id="page">
-    <img class="backButton" src="icons/backbutton.png" onclick="history.back()">
+    <img class="backButton" src="./backbutton.png" onclick="history.back()">
     <div class="box">
     <button class="button addBtn" onclick="redirectAdd()">+</button>
-    <input class="searchbox" type="text" placeholder="Search" onkeyup="updateCreds()">
+    <button class="button refreshBtn fa fa-refresh fa-xl" onclick="updateCreds()"></button>
     <table id="credList">
     <thead>
       <tr>

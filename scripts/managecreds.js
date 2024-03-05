@@ -1,5 +1,3 @@
-
-
 function clearElement(id) {
 	const element = document.getElementById(id);
 	element.innerHTML = '';
@@ -18,7 +16,6 @@ function getCookieToken() {
     };
 	};
 };
-
 function setAttributes(element, attributes) { // https://bobbyhadz.com/blog/javascript-set-multiple-attributes-to-element
 	Object.keys(attributes).forEach(attr => {
 		element.setAttribute(attr, attributes[attr])
@@ -45,18 +42,15 @@ function addTblRecord(tblid, json_data) {
 	const delBtn = document.createElement('button');
 	const modifyBtn = document.createElement('button');
 	const viewHistoryBtn = document.createElement('button');
-	// viewHistoryBtn.innerText = "ˇ";
 	viewHistoryBtn.title = "View Credential History";
-	// modifyBtn.innerText = '~';
 	modifyBtn.title = "Modfy Credential";
-	// delBtn.innerText = '-';
 	delBtn.title = "Delete Credential";
 	const delBtn_icon = document.createElement('i');
 	const modifyBtn_icon = document.createElement('i');
 	const viewHistoryBtn_icon = document.createElement('i');
 	delBtn_icon.setAttribute('class',"fa fa-trash fa-xl");
-	modifyBtn_icon.setAttribute('class',"fa fa-pencil");
-	viewHistoryBtn_icon.setAttribute('class',"fa fa-eye");
+	modifyBtn_icon.setAttribute('class',"fa fa-pencil fa-xl");
+	viewHistoryBtn_icon.setAttribute('class',"fa fa-eye fa-xl");
 
 	delBtn.appendChild(delBtn_icon);
 	modifyBtn.appendChild(modifyBtn_icon);
@@ -71,11 +65,6 @@ function addTblRecord(tblid, json_data) {
 	setAttributes(modifyBtn, attributes);
 	attributes['class'] = 'btn viewHistoryBtn';
 	setAttributes(viewHistoryBtn, attributes);
-
-	// delBtn_dat.setAttribute('class', 'tblBtn');
-	// modifyBtn_dat.setAttribute('class', 'tblBtn');
-	// viewHistoryBtn_dat.setAttribute('class', 'tblBtn');
-
 
 	delBtn_dat.appendChild(delBtn);
 	modifyBtn_dat.appendChild(modifyBtn);
@@ -118,39 +107,62 @@ function delCred(id) {
 		};
 	});
 };
+function updateCreds(Creds) {
+	clearElement("credBody")
+	for(let i = 0; i < Creds.length; i++) {
+		addTblRecord('credBody',Creds[i]);
+	};
+	delBtns = document.querySelectorAll(".delBtn");
+	modifyBtns = document.querySelectorAll('.modifyBtn');
+	viewHistoryBtns = document.querySelectorAll('.viewHistoryBtn')
+	pwdCells = document.querySelectorAll('.pwd')
+	delBtns.forEach(function(btn) {
+		btn.addEventListener('click', function() {
+			delCred(btn.id)
+		});
+	});
+	modifyBtns.forEach(function(btn) {
+		btn.addEventListener('click', function() {
+			redirectModify(btn)
+		});
+	});
+	viewHistoryBtns.forEach(function(btn) {
+		btn.addEventListener('click', function() {
+			window.location.href = "/view.html?credid="+btn.id
+		});
+	});
+	pwdCells.forEach(function(cell) {
+		cell.addEventListener('click', function() {
+			displayPassword(cell)
+		}, {once: true});
+	});
+};
+function displayPassword(pwdcell) {
+	const token = getCookieToken()
+	const credid = {"credid": pwdcell.id}
+	options = {
+		headers: {"Authorization": "Bearer "+token},
+		body: JSON.stringify(credid)
+	}
+	fetch("https://passwordless.duckdns.org:8000/creds/getDecryptPassword", options)
+	.catch(console.error())
+	.then(data => data.json())
+	.then(function(data) {
+		credid = pwdcell.id
+		pwdcell.innerText = data[credid];
+	});
+};
 
 $(document).ready(function(){
 	const token = getCookieToken();
 	if(!token) {
 		window.location.href = "/loginsignup.html?created=SessionTimeOut"
 	};
-	const headers = {'Authorization': 'Bearer '+token}
-	fetch("https://passwordless.duckdns.org:8000/creds/getCreds", {headers})
+	const headers = {'Authorization': 'Bearer '+token};
+	fetch("https://passwordless.duckdns.org:8000/creds/getCreds",{headers})
 	.then(data => data.json())
 	.then(function(data) {
-		console.log(data)
-	  clearElement("credBody")
-    for(let i = 0; i < data.length; i++) {
-    	addTblRecord('credList',data[i]);
-  	};
-		delBtns = document.querySelectorAll(".delBtn");
-		modifyBtns = document.querySelectorAll('.modifyBtn');
-		viewHistoryBtns = document.querySelectorAll('.viewHistoryBtn')
-		delBtns.forEach(function(btn) {
-			btn.addEventListener('click', function() {
-				delCred(btn.id)
-			});
-		});
-		modifyBtns.forEach(function(btn) {
-			btn.addEventListener('click', function() {
-				redirectModify(btn)
-			});
-		});
-		viewHistoryBtns.forEach(function(btn) {
-			btn.addEventListener('click', function() {
-				window.location.href = "/view.html?credid="+btn.id
-			});
-		});
-  });
+		updateCreds(data);
+	})
 });
 
