@@ -9,6 +9,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pyaes256 import PyAES256
 import json
+import db
 
 SECRET_KEY = "5b0cebd0127a1eb2b06333f7dd133e69686b36fab502ba8c0225a20e7c0b6330"
 ALGORITHM = "HS256"
@@ -48,7 +49,7 @@ def create_access_token(to_encode: dict, expires_delta: timedelta | None = None)
     return encoded_jwt
 
 def authenticate_user(email: str, password: str):
-    user = get_user_by_email(email)
+    user = db.get_user_by_email(email)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -60,56 +61,7 @@ def map_list_to_dict(lstitem, attrs: list):
   kwargs = dict(zip(attrs,lstitem))
   return kwargs
 
-def get_user_by_uid(uid: str):
-  with sqlite3.connect("users.db") as conn:
-    try:
-      cursor = conn.cursor()
-      user = cursor.execute(f"SELECT * FROM users WHERE uid = '{uid}'").fetchone()
-      attributes = [x[0] for x in cursor.description]
-      user = map_list_to_dict(user, attributes)
-      user = UserInDB(**user)
-      return user
-    except:
-      return None
 
-
-
-def get_user_by_email(email: str):
-  with sqlite3.connect("users.db") as conn:
-    try:
-      cursor = conn.cursor()
-      user = cursor.execute(f"SELECT * FROM users WHERE email = '{email}'").fetchone()
-      attributes = [x[0] for x in cursor.description]
-      user = map_list_to_dict(user, attributes)
-      user = UserInDB(**user)
-      return user
-    except Exception as e:
-      print(e)
-      return None
-
-def get_creds(current_user: UserIn):
-  with sqlite3.connect('users.db') as conn:
-    cursor = conn.cursor()
-    cred_data = cursor.execute(f"SELECT * FROM credentials WHERE uid='{current_user.uid}';").fetchall()
-    columns = [x[0] for x in cursor.description]
-    creds = []
-    for cred in cred_data:
-      cred = map_list_to_dict(cred, columns)
-      cred["password"] = json.loads(cred["password"])
-      creds.append(cred)
-  return creds
-
-def get_old_creds_bycredid(credid: str):
-   with sqlite3.connect('users.db') as conn:
-    cursor = conn.cursor()
-    cred_data = cursor.execute(f"SELECT * FROM old_credentials WHERE credid='{credid}';").fetchall()
-    columns = [x[0] for x in cursor.description]
-    creds = []
-    for cred in cred_data:
-      cred = map_list_to_dict(cred, columns)
-      cred["password"] = json.loads(cred["password"])
-      creds.append(cred)
-   return creds
 
 async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
@@ -124,7 +76,7 @@ async def process_token(token: Annotated[str, Depends(oauth2_scheme)]):
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = get_user_by_uid(uid)
+    user = db.get_user_by_id(uid)
     if user is None:
         raise credentials_exception
     return user
