@@ -77,7 +77,7 @@ def add_cred(newCred: CredentialIn, id: int):
       return {"error": "user already exists", "response":e}
     return {"success": "new credential added"}
 
-def modify_cred(updCred: CredentialIn): #TO COMPLETE
+def modify_cred(updCred: CredentialIn):
   with Session(engine) as db:
     cred = db.exec(select(CredentialInDB).where(CredentialInDB.id == updCred)).one()
     if cred.username == updCred.username and cred.email == updCred.email and cred.password == updCred.password and cred.site == updCred.site:
@@ -101,19 +101,26 @@ def modify_cred(updCred: CredentialIn): #TO COMPLETE
     return {'success': 'data-updated', 'old':oldCred, 'new':cred}
 
 
-def delete_cred(credid: int):
+def delete_cred(credid: int, old:bool):
+  if old:
+    model = oldCredential
+  else:
+    model = CredentialInDB
   with Session(engine) as db:
-    toDelete = db.exec(select(CredentialInDB).where(CredentialInDB.id == credid)).one()
+    toDelete = db.exec(select(model).where(model.id == credid)).one()
     db.delete(toDelete)
     db.commit()
+    
 
-    stillExists = db.exec(select(CredentialInDB).where(CredentialInDB.id == credid)).first() #first returns None instead of error
+    stillExists = db.exec(select(model).where(model.id == credid)).first() #first returns None instead of error
     if stillExists is None:
       return {"success": "deleted credential", "site": toDelete.site, "email": toDelete.email}
     return {"error": "credential not deleted"}
 
+def get_password(model, credid: int): #TO COMPLETE
+  pass
 
 if __name__ == "__main__": # run this file to create DB using engine. using if statement to prevent it from running when engine is imported
   main()
-  get_user_by_id(1)
+
 

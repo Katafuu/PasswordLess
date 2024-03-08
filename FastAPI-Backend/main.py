@@ -111,10 +111,7 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
 @app.post("/users/addUser", status_code=201) #create new user account
 async def add_user(user: UserIn):
   user.password = hash_password(user.password)
-  with sqlite3.connect("users.db") as conn:
-    conn.execute(f"INSERT INTO users VALUES('{user.uid}','{user.email.lower()}','{user.username}','{user.date_created}','{user.password}')")
-    conn.commit()
-    return {"message":f"user with id: {user.uid} - successfully added", "name":{user.username}}
+  db.add_user(user)
 
 @app.get("/users/self", response_model=UserOut)
 async def read_me(current_user: Annotated[UserInDB, Depends(process_token)]):
@@ -122,68 +119,34 @@ async def read_me(current_user: Annotated[UserInDB, Depends(process_token)]):
 
 @app.get("/creds/getCreds")
 async def getActiveCreds(current_user: Annotated[UserIn, Depends(process_token)]):
-  return get_creds(current_user)
+  return db.get_creds(current_user)
 
 @app.get("/creds/getOldCreds")
 async def getOldCreds(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
-  return get_old_creds_bycredid(credid)
+  return db.get_old_creds_byid(credid)
 
 @app.post("/creds/addCred")
 async def addCred(cred: CredentialIn, current_user: Annotated[UserIn, Depends(process_token)]):
-  cred = cred.model_dump()
-  cred["password"] = AES_encrypt(cred["password"])
-  cred = CredentialInDB(**cred)
-  with sqlite3.connect("users.db") as conn:
-    exists = conn.execute(f"SELECT * FROM credentials WHERE (uid='{current_user.uid}' AND site='{cred.site}') AND (email='{cred.email}' OR username='{cred.username}')").fetchone()
-    if exists:
-       return {"message": "error, already exists"}
-    else:
-      conn.execute(f"INSERT INTO credentials VALUES('{cred.credid}','{current_user.uid}','{cred.site}','{cred.username}','{cred.email}','{cred.password.model_dump_json()}','{cred.date_added}');")
-      conn.commit()
-  return {"response": "success", "username": cred.username, "site": cred.site}
+  response = db.add_cred(cred)['success']
+  return response
+  
 
 @app.put("/creds/modifyCred")
 async def modifyCred(request: Request, current_user: Annotated[UserIn,  Depends(process_token)]):
    body = await request.json()
    updCred = CredentialIn(**body)
-   with sqlite3.connect('users.db') as conn:
-      cursor = conn.cursor()
-      oldCred = cursor.execute(f"SELECT * FROM credentials WHERE credid='{updCred.credid}'").fetchone()
-      columns = [x[0] for x in cursor.description]
-      oldCred = oldCredential(**map_list_to_dict(oldCred, columns))
-      identical = oldCred.site == updCred.site and oldCred.email == updCred.email and oldCred.username == updCred.username and updCred.password == AES_decrypt(oldCred.password)
-      if identical:
-         return {"message": "no changes made"}
-      else:
-        updCred = updCred.model_dump()
-        updCred["password"] = AES_encrypt(updCred["password"])
-        updCred = CredentialInDB(**updCred)
-        conn.execute(f"UPDATE credentials SET site='{updCred.site}', username='{updCred.username}', email='{updCred.email}', password='{updCred.password.model_dump_json()}', date_added='{updCred.date_added}' WHERE credid='{updCred.credid}';")
-        conn.execute(f"INSERT INTO old_credentials VALUES('{oldCred.oldcred_uid}','{oldCred.credid}','{oldCred.site}','{oldCred.username}','{oldCred.email}','{oldCred.password}','{oldCred.date_added}','{updCred.date_added}');")
-        conn.commit()
-   return {'message': 'success'}
-
+   response = db.modify_cred(updCred)
+   return response
 @app.delete("/creds/delCred")
 async def delCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
-   with sqlite3.connect('users.db') as conn:
-      cursor = conn.cursor()
-      cred_data = cursor.execute(f"SELECT * FROM credentials WHERE credid='{credid}';").fetchone()
-      columns = [x[0] for x in cursor.description]
-      oldCred = oldCredential(**map_list_to_dict(cred_data, columns))
-      conn.execute(f"DELETE FROM credentials WHERE credid = '{credid}';")
-      conn.execute(f"INSERT INTO old_credentials VALUES('{oldCred.oldcred_uid}','{oldCred.credid}','{oldCred.site}','{oldCred.username}','{oldCred.email}','{oldCred.password}','{oldCred.date_added}','{datetime.now().strftime('%x')}');")
-      conn.commit()
-   return {'message': 'success', 'cred_removed': credid}
+   return db.delete_cred(credid, False)
 
 @app.delete("/creds/delOldCred")
 async def delOldCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
-   with sqlite3.connect('users.db') as conn:
-      conn.execute(f"DELETE FROM old_credentials WHERE oldcred_uid = '{credid}';")
-      conn.commit()
-   return {'message': 'success', 'cred_removed': credid}
+   return db.delete_cred(credid, True)
 
 @app.post("/creds/getDecryptPassword")
-async def getDecryptPwd(db: str, credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
+async def getDecryptPwd(db: str, credid: int, current_user: Annotated[UserIn, Depends(process_token)]):
   with sqlite3.connect('users.db') as conn:
     cursor = conn.cursor()
     cred_data = cursor.execute(f"SELECT password FROM {db} WHERE credid='{credid}';").fetchone()
