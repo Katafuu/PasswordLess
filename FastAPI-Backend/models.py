@@ -17,7 +17,7 @@ def get_date():
 
 class UserBase(SQLModel):
   id: Optional[int] = Field(default=None, primary_key=True, index=True)
-  email: str
+  email: str = Field(unique=True)
   username: str
   date_created: Optional[str] = Field(default_factory=get_date)
 
@@ -50,7 +50,7 @@ class CredentialIn(CredentialBase):
   password: str
 
 class CredentialOut(CredentialBase):
-  password: encrypted_data
+  password: str
   def model_post_init(self, __context) -> None:
       self.password = "***" 
 

@@ -4,7 +4,7 @@ from passlib.context import CryptContext
 
 
 
-DATABASE_URL = "sqlite:///Website/FastAPI-Backend/dbtest.db"
+DATABASE_URL = "sqlite:///dbtest.db"
 engine = create_engine(DATABASE_URL, echo=True) #echo makes it print whenever it executes for learning
 # engine will be imported elsewhere for CRUD
 
@@ -37,12 +37,12 @@ def create_mock_data():
 
 def main():
   create_db()
-  create_mock_data()
+  # create_mock_data()
 
 def get_user_by_email(email: str):
   with Session(engine) as db:
     select_statemenet = select(UserInDB).where(UserInDB.email == email)
-    user = db.exec(select_statemenet).one()
+    user = db.exec(select_statemenet).first()
     return user
 
 def get_user_by_id(id: int):
@@ -52,12 +52,22 @@ def get_user_by_id(id: int):
 
 def get_creds(current_user: UserIn):
   with Session(engine) as db:
-    creds = db.exec(select(CredentialInDB).where(CredentialInDB.owner_id == current_user.id)).all()
+    result = db.exec(select(CredentialInDB).where(CredentialInDB.owner_id == current_user.id)).all()
+    creds = []
+    for cred in result:
+      cred.password = "******"
+      cred = CredentialOut(**cred.model_dump())
+      creds.append(cred)
     return creds
   
 def get_old_creds_byid(id: int):
   with Session(engine) as db:
-    creds = db.exec(select(oldCredential).where(oldCredential.credid == id)).all()
+    result = db.exec(select(oldCredential).where(oldCredential.credid == id)).all()
+    creds = []
+    for cred in result:
+      cred.password = "******"
+      cred = CredentialOut(**cred.model_dump())
+      result.append(cred)
     return creds
 
 def add_user(user: UserInDB):
@@ -66,6 +76,7 @@ def add_user(user: UserInDB):
     newUser = UserInDB(email=user.email, username=user.username, hashed_password=hashedPwd)
     db.add(newUser)
     db.commit()
+    return {"success":"user added"}
 
 def add_cred(newCred: CredentialIn, id: int):
   with Session(engine) as db:
@@ -79,7 +90,7 @@ def add_cred(newCred: CredentialIn, id: int):
 
 def modify_cred(updCred: CredentialIn):
   with Session(engine) as db:
-    cred = db.exec(select(CredentialInDB).where(CredentialInDB.id == updCred)).one()
+    cred = db.exec(select(CredentialInDB).where(CredentialInDB.id == updCred.id)).one()
     if cred.username == updCred.username and cred.email == updCred.email and cred.password == updCred.password and cred.site == updCred.site:
       return {"error": "duplication-error, no changes made"}
     
@@ -118,7 +129,9 @@ def delete_cred(credid: int, old:bool):
     return {"error": "credential not deleted"}
 
 def get_password(model, credid: int): #TO COMPLETE
-  pass
+  with Session(engine) as db:
+    return db.exec(select(model.password).where(model.id == credid)).one()
+  
 
 if __name__ == "__main__": # run this file to create DB using engine. using if statement to prevent it from running when engine is imported
   main()

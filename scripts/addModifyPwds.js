@@ -46,7 +46,7 @@ function modifyCred(id) {
 						'Bearer '+token
 		},
 		body: JSON.stringify({
-			credid: id,
+			id: id,
       site: document.getElementById("site").value,
 			email: document.getElementById("email").value,
 			username: document.getElementById("username").value,
@@ -54,8 +54,8 @@ function modifyCred(id) {
 		},)
 	}
 	fetch("https://passwordless.duckdns.org:8000/creds/modifyCred",options)
-		.then(res => res.json())
-		.then(d => {console.log(d)});
+		.then(res => res.json());
+	setTimeout(3000)
 	window.location.href = "/"
 };
 
@@ -68,7 +68,6 @@ $(document).ready(function () {
 		})
 	}
   else {
-		console.log(window.location.pathname)
 		const searchParams = new URLSearchParams(window.location.search);
 		// loads values into DOM
 		document.getElementById('site').value = searchParams.get('site');

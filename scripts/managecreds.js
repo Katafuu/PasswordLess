@@ -24,14 +24,14 @@ function setAttributes(element, attributes) { // https://bobbyhadz.com/blog/java
 function addTblRecord(tblid, json_data) {
   const credList = document.getElementById(tblid);
   const tbl_rec = credList.insertRow(-1);
-	const ID = json_data['credid'];
-	delete json_data.credid;
-	delete json_data.uid;
+	const ID = json_data['id'];
+	delete json_data.id;
 
   for(const key in json_data) { // adding data to tblrec element
 		const tbl_dat = document.createElement('td');
 		if(key == 'password') {
-			tbl_dat.setAttribute('class','pwd')
+			tbl_dat.setAttribute('class','pwd');
+			tbl_dat.id = ID;
 		};
 		tbl_dat.innerText = json_data[key];
 		tbl_rec.appendChild(tbl_dat);
@@ -138,13 +138,12 @@ function updateCreds(Creds) {
 	});
 };
 function displayPassword(pwdcell) {
-	const token = getCookieToken()
-	const credid = {"credid": pwdcell.id}
+	const token = getCookieToken();
 	options = {
-		headers: {"Authorization": "Bearer "+token},
-		body: JSON.stringify(credid)
-	}
-	fetch("https://passwordless.duckdns.org:8000/creds/getDecryptPassword", options)
+		method: "GET",
+		headers: {"Authorization": "Bearer "+token}
+	};
+	fetch("https://passwordless.duckdns.org:8000/creds/getDecryptPassword?tbl=c&credid="+pwdcell.id, options)
 	.catch(console.error())
 	.then(data => data.json())
 	.then(function(data) {
@@ -152,17 +151,21 @@ function displayPassword(pwdcell) {
 		pwdcell.innerText = data[credid];
 	});
 };
-
-$(document).ready(function(){
+function refresh() {
 	const token = getCookieToken();
-	if(!token) {
-		window.location.href = "/loginsignup.html?created=SessionTimeOut"
-	};
 	const headers = {'Authorization': 'Bearer '+token};
 	fetch("https://passwordless.duckdns.org:8000/creds/getCreds",{headers})
 	.then(data => data.json())
 	.then(function(data) {
 		updateCreds(data);
-	})
+	});
+};
+$(document).ready(function(){
+	const token = getCookieToken();
+	if(!token) {
+		window.location.href = "/loginsignup.html?created=SessionTimeOut"
+	};
+	refresh();
 });
+
 

@@ -16,6 +16,15 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/getToken",scheme_name="JWT")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def create_db():
+  db.SQLModel.metadata.create_all(db.engine)
+
+if __name__ == "__main__":
+   create_db()
+
+
+
 app = FastAPI()
 origins = [
     "http://passwordless.duckdns.org",
@@ -53,6 +62,7 @@ def authenticate_user(email: str, password: str):
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
+        print("oh no, wrong pwd\n\n")
         return False
     return user
 
@@ -90,13 +100,13 @@ def AES_encrypt(data: str):
 def AES_decrypt(data: encrypted_data):
   key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
   plaintext = PyAES256().decrypt(url=data.url, salt=data.salt, iv=data.iv, password=key)
-  plaintext = bytes.decode(plaintext)
-  return {"plaintext": plaintext}
+  return bytes.decode(plaintext)
 
 #------------------------------------------------------- endpoint start, utility end
 @app.post("/getToken")
 async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
   user = authenticate_user(form_data.username.lower(), form_data.password)
+
   if not user:
      raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -104,30 +114,34 @@ async def checkUserDetails(form_data: Annotated[OAuth2PasswordRequestForm, Depen
             headers={"WWW-Authenticate": "Bearer"},
         )
   expiry = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-  data = {"sub":str(user.uid)}
+  data = {"sub":str(user.id)}
   access_token = create_access_token(data, expiry)
   return {"access_token": access_token, "token_type":"bearer"}
 
 @app.post("/users/addUser", status_code=201) #create new user account
 async def add_user(user: UserIn):
-  user.password = hash_password(user.password)
-  db.add_user(user)
+  response = db.add_user(user)
+  return response
 
 @app.get("/users/self", response_model=UserOut)
 async def read_me(current_user: Annotated[UserInDB, Depends(process_token)]):
    return current_user
 
 @app.get("/creds/getCreds")
-async def getActiveCreds(current_user: Annotated[UserIn, Depends(process_token)]):
+async def getActiveCreds(current_user: Annotated[UserIn, Depends(process_token)], response_model=CredentialOut):
   return db.get_creds(current_user)
+  
 
 @app.get("/creds/getOldCreds")
-async def getOldCreds(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
+async def getOldCreds(credid: int, current_user: Annotated[UserIn, Depends(process_token)]):
   return db.get_old_creds_byid(credid)
 
 @app.post("/creds/addCred")
 async def addCred(cred: CredentialIn, current_user: Annotated[UserIn, Depends(process_token)]):
-  response = db.add_cred(cred)['success']
+  pwd = AES_encrypt(cred.password)
+  cred.password = pwd.model_dump_json()
+  print(cred.password, type(cred.password))
+  response = db.add_cred(cred, current_user.id)
   return response
   
 
@@ -135,6 +149,7 @@ async def addCred(cred: CredentialIn, current_user: Annotated[UserIn, Depends(pr
 async def modifyCred(request: Request, current_user: Annotated[UserIn,  Depends(process_token)]):
    body = await request.json()
    updCred = CredentialIn(**body)
+   print(updCred)
    response = db.modify_cred(updCred)
    return response
 @app.delete("/creds/delCred")
@@ -145,11 +160,16 @@ async def delCred(credid: str, current_user: Annotated[UserIn, Depends(process_t
 async def delOldCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
    return db.delete_cred(credid, True)
 
-@app.post("/creds/getDecryptPassword")
-async def getDecryptPwd(db: str, credid: int, current_user: Annotated[UserIn, Depends(process_token)]):
-  with sqlite3.connect('users.db') as conn:
-    cursor = conn.cursor()
-    cred_data = cursor.execute(f"SELECT password FROM {db} WHERE credid='{credid}';").fetchone()
-    columns = [x[0] for x in cursor.description]
-    cred_data = map_list_to_dict(cred_data, columns)
-  return {credid: cred_data}
+@app.get("/creds/getDecryptPassword")
+async def getDecryptPwd(tbl: str, credid: int, current_user: Annotated[UserIn, Depends(process_token)]):
+  if tbl == "old":
+     model = oldCredential
+  else:
+     model = CredentialInDB
+  pwd = db.get_password(model, credid)
+  print(pwd)
+  pwd = json.loads(pwd)
+  print(pwd)
+  pwd = AES_decrypt(db.encrypted_data(**pwd))
+  print(pwd)
+  return {credid:pwd}

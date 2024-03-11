@@ -81,17 +81,21 @@ function updateCreds(Creds) {
 	});
 };
 
-$(document).ready(function() {
-  const searchParams = new URLSearchParams(window.location.search);
+function refresh() {
+	const searchParams = new URLSearchParams(window.location.search);
   const credid = searchParams.get("credid");
-  const token = getCookieToken();
-  if(!token) {
-		window.location.href = "/loginsignup.html?created=SessionTimeOut"
-	};
+	const token = getCookieToken();
 	const headers = {'Authorization': 'Bearer '+token};
-	fetch("https://passwordless.duckdns.org:8000/creds/getOldCreds?credid="+credid, {headers})
+	fetch("https://passwordless.duckdns.org:8000/creds/getOldCreds?tbl=old&credid="+credid, {headers})
 	.then(data => data.json())
 	.then(function(data) {
     updateCreds(data)
   });
+}
+$(document).ready(function() {
+  const token = getCookieToken();
+  if(!token) {
+		window.location.href = "/loginsignup.html?created=SessionTimeOut"
+	};
+	refresh()
 });
