@@ -60,5 +60,7 @@ class oldCredential(CredentialBase, table=True):
   credid: Optional[int] = Field(index=True, foreign_key="credentials.id")
   date_removed: Optional[str] = Field(default_factory=get_date)
 
+class oldCredOut(CredentialOut):
+  date_removed: Optional[str] = Field(default_factory=get_date)
 #add child account, account type field and one to many link (max 1 parent)
 

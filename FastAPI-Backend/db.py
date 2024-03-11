@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 
 
 DATABASE_URL = "sqlite:///dbtest.db"
-engine = create_engine(DATABASE_URL, echo=True) #echo makes it print whenever it executes for learning
+engine = create_engine(DATABASE_URL) #echo makes it print whenever it executes for learning
 # engine will be imported elsewhere for CRUD
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -60,14 +60,17 @@ def get_creds(current_user: UserIn):
       creds.append(cred)
     return creds
   
-def get_old_creds_byid(id: int):
+def get_old_creds_byid(id: int, uid: int):
   with Session(engine) as db:
-    result = db.exec(select(oldCredential).where(oldCredential.credid == id)).all()
+    result = db.exec(select(oldCredential).where(oldCredential.credid == CredentialInDB.id).where(CredentialInDB.owner_id == id)).all()
+    for x in result:
+      print("X:---")
+      print(x, type(x))
     creds = []
     for cred in result:
       cred.password = "******"
-      cred = CredentialOut(**cred.model_dump())
-      result.append(cred)
+      cred = oldCredOut(**cred.model_dump())
+      creds.append(cred)
     return creds
 
 def add_user(user: UserInDB):

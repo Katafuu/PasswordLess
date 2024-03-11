@@ -153,6 +153,9 @@ function displayPassword(pwdcell) {
 };
 function refresh() {
 	const token = getCookieToken();
+	if(!token) {
+		window.location.href = "/loginsignup.html?created=SessionTimeOut"
+	};
 	const headers = {'Authorization': 'Bearer '+token};
 	fetch("https://passwordless.duckdns.org:8000/creds/getCreds",{headers})
 	.then(data => data.json())
@@ -160,12 +163,4 @@ function refresh() {
 		updateCreds(data);
 	});
 };
-$(document).ready(function(){
-	const token = getCookieToken();
-	if(!token) {
-		window.location.href = "/loginsignup.html?created=SessionTimeOut"
-	};
-	refresh();
-});
-
 

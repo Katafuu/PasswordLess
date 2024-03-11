@@ -134,7 +134,7 @@ async def getActiveCreds(current_user: Annotated[UserIn, Depends(process_token)]
 
 @app.get("/creds/getOldCreds")
 async def getOldCreds(credid: int, current_user: Annotated[UserIn, Depends(process_token)]):
-  return db.get_old_creds_byid(credid)
+  return db.get_old_creds_byid(credid, current_user.id)
 
 @app.post("/creds/addCred")
 async def addCred(cred: CredentialIn, current_user: Annotated[UserIn, Depends(process_token)]):
