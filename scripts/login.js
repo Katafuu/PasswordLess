@@ -46,7 +46,16 @@ $(document).ready(function () {
 			body: formData,
 		};
 		fetch("https://passwordless.duckdns.org:8000/getToken", options)
-		.then(data => data.json())
+		.then(function(response) {
+			const errordiv = document.getElementById('errorMsg')
+			errordiv.innerText = ' ';
+			if (response.status==401) {
+				errordiv.innerText = "Error, incorrect username or password. Please try again" 
+				throw new Error("Unauthorized")
+			} else {
+				return response.json();
+			};
+		})
 		.then(function(data) {
 			console.log(data)
 			setToken(data['access_token']);

@@ -20,7 +20,8 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def create_db():
   db.SQLModel.metadata.create_all(db.engine)
 
-if __name__ == "__main__":
+
+if __name__ == "main":
    create_db()
 
 

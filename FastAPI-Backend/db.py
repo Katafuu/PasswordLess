@@ -101,6 +101,7 @@ def modify_cred(updCred: CredentialIn):
     oldCred = cred.model_dump()
     del oldCred['id'] # ensuring id is empty so that it generates a new unique id in the db
     oldCred = oldCredential(**oldCred, credid=cred.id, date_removed=get_date()) #saving old credential
+    oldCred.password = str(AES_encrypt(oldCred.password))
     db.add(oldCred)
 
     cred.site = updCred.site
