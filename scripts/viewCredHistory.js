@@ -106,7 +106,7 @@ function updateCreds(Creds) {
 function refresh() {
 	const token = getCookieToken();
 	if(!token) {
-		window.location.href = "/loginsignup.html?created=SessionTimeOut"
+		window.location.href = "/loginsignup.html?status=SessionTimeOut"
 	};
 	const searchParams = new URLSearchParams(window.location.search);
   const credid = searchParams.get("credid");

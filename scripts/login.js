@@ -17,7 +17,20 @@ function setToken(token) {
   document.cookie = "token="+token + ";expires="+d.toUTCString() + ";path=/";
 };
 
-
+function getStatus() {
+	const searchParams = new URLSearchParams(window.location.search);
+  const status = searchParams.get("status");
+	const StatusText = document.getElementById('errorMsg');
+	if (status == 'SessionTimeOut') {
+		StatusText.innerText = "Session Timed Out. Please Login Again";
+	}
+	else {
+		if(status == 'created') {
+			StatusText.setAttribute('style','color: green;')
+			StatusText.innerText = "Account Successfully Created! Please Login"
+		}
+	}
+};
 function sendSignupData() {
 	const options = {
 		method: 'POST',
@@ -34,10 +47,12 @@ function sendSignupData() {
 	fetch("https://passwordless.duckdns.org:8000/users/addUser",options)
 		.then(res => res.json())
 		.then(d => {console.log(d)});
-	window.location.href = "https://passwordless.duckdns.org/loginsignup.html?created=True"
+	window.location.href = "https://passwordless.duckdns.org/loginsignup.html?status=created";
+	getStatus();
 };
 
 $(document).ready(function () {
+	getStatus();
   $("#loginForm").submit(function (event) {
 		event.preventDefault();
 		const formData = new FormData(document.querySelector("#loginForm"));
@@ -49,11 +64,12 @@ $(document).ready(function () {
 		.then(function(response) {
 			const errordiv = document.getElementById('errorMsg')
 			errordiv.innerText = ' ';
-			if (response.status==401) {
-				errordiv.innerText = "Error, incorrect username or password. Please try again" 
-				throw new Error("Unauthorized")
+			if (response.status==200) {
+				return response.json()
 			} else {
-				return response.json();
+				if (response.status==401 || response.status==422)
+				errordiv.innerText = "Error, invalid username or password. Please try again" 
+				throw new Error("Unauthorized")
 			};
 		})
 		.then(function(data) {

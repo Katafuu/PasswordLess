@@ -10,6 +10,7 @@ from passlib.context import CryptContext
 from pyaes256 import PyAES256
 import json
 import db
+import string
 
 SECRET_KEY = "5b0cebd0127a1eb2b06333f7dd133e69686b36fab502ba8c0225a20e7c0b6330"
 ALGORITHM = "HS256"

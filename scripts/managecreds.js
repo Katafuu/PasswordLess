@@ -2,6 +2,10 @@ function clearElement(id) {
 	const element = document.getElementById(id);
 	element.innerHTML = '';
 }
+function logout() {
+	document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+	window.location.href = "./";
+};
 function getCookieToken() {
 	let cookies = document.cookie.split(';');
 	for(let i = 0; i < cookies.length; i++) {
@@ -154,7 +158,7 @@ function displayPassword(pwdcell) {
 function refresh() {
 	const token = getCookieToken();
 	if(!token) {
-		window.location.href = "/loginsignup.html?created=SessionTimeOut"
+		window.location.href = "/loginsignup.html?status=SessionTimeOut"
 	};
 	const headers = {'Authorization': 'Bearer '+token};
 	fetch("https://passwordless.duckdns.org:8000/creds/getCreds",{headers})
