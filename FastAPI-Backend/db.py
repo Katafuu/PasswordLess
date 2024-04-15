@@ -132,10 +132,13 @@ def delete_cred(credid: int, old:bool):
       return {"success": "deleted credential", "site": toDelete.site, "email": toDelete.email}
     return {"error": "credential not deleted"}
 
-def get_password(model, credid: int): #TO COMPLETE
+def get_password(model, credid: int):
   with Session(engine) as db:
     return db.exec(select(model.password).where(model.id == credid)).one()
   
+def get_site_cred(siteurl: str):
+  with Session(engine) as db:
+    return db.exec(select(CredentialInDB).where(CredentialInDB.site == siteurl)).all()
 
 if __name__ == "__main__": # run this file to create DB using engine. using if statement to prevent it from running when engine is imported
   main()

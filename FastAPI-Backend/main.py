@@ -175,3 +175,8 @@ async def getDecryptPwd(tbl: str, credid: int, current_user: Annotated[UserIn, D
   pwd = AES_decrypt(db.encrypted_data(**pwd))
   print(pwd)
   return {credid:pwd}
+
+@app.get("/creds/getCred")
+async def getWebsiteCred(siteurl: str, current_user: Annotated[UserIn, Depends(process_token)]):
+   cred = db.get_site_cred(siteurl)
+   return cred
