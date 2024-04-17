@@ -1,11 +1,10 @@
 function getCookieToken() {
-  console.log(document.cookie)
 	let cookies = document.cookie.split(';');
 	for(let i = 0; i < cookies.length; i++) {
 	  cookies[i] = cookies[i].split('=')
 	};
 	for (let x = 0; x < cookies.length; x++){
-	  if (cookies[x][0] == 'token') {
+	  if (cookies[x][0].trim() == 'token') {
 		  return cookies[x][1];
 	  }
 	};

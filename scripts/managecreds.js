@@ -12,12 +12,10 @@ function getCookieToken() {
 	  cookies[i] = cookies[i].split('=')
 	};
 	for (let x = 0; x < cookies.length; x++){
-	  if (cookies[x][0] == 'token') {
+		console.log(cookies[x][0])
+	  if (cookies[x][0].trim() == 'token') {
 		  return cookies[x][1];
 	  }
-    else {
-      return null
-    };
 	};
 };
 function setAttributes(element, attributes) { // https://bobbyhadz.com/blog/javascript-set-multiple-attributes-to-element
@@ -104,7 +102,6 @@ function delCred(id) {
 	};
 	fetch('https://passwordless.duckdns.org:8000/creds/delCred?credid='+id, options)
 	.then(data => data.json())
-	.catch(console.log(error))
 	.then(function(data) {
 		if(data) {
 			alert('Successfully deleted, it can be found in your password history')
@@ -168,3 +165,6 @@ function refresh() {
 	});
 };
 
+function setConsent(set_to) {
+	document.cookie = "autofill_consent="+set_to+"; path=/;"
+}

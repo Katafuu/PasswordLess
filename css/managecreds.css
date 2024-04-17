@@ -139,3 +139,15 @@ a, a:hover, a:visited, a:link, a:active{
 .pwd:hover {
   display: inline;
 }
+
+#consent {
+  text-align: right;
+}
+
+.consent_btn1 {
+  color: green;
+}
+
+.consent_btn2 {
+  color: red;
+}

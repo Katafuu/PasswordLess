@@ -176,7 +176,16 @@ async def getDecryptPwd(tbl: str, credid: int, current_user: Annotated[UserIn, D
   print(pwd)
   return {credid:pwd}
 
-@app.get("/creds/getCred")
+@app.get("/creds/getCredAutoFill")
 async def getWebsiteCred(siteurl: str, current_user: Annotated[UserIn, Depends(process_token)]):
-   cred = db.get_site_cred(siteurl)
-   return cred
+  saved_creds = db.get_site_cred(siteurl)
+  if saved_creds != []:
+    for cred in saved_creds:
+      cred.password = AES_decrypt(db.encrypted_data(**json.loads(cred.password)))
+    return saved_creds
+  else:
+     raise HTTPException(
+            status_code=status.HTTP_204_NO_CONTENT,
+            detail="Not Found"
+        )
+

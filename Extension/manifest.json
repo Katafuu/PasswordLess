@@ -22,7 +22,8 @@
   },
   "permissions": [
     "cookies",
-    "storage"
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
     "*://passwordless.duckdns.org/"

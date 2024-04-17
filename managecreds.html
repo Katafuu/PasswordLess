@@ -17,6 +17,12 @@
   <div id="page">
     <img class="backButton" src="./backbutton.png" onclick="history.back()">
     <button class="button" onclick="logout()">Logout</button>
+    <div id="consent">
+      <p>Consent Menu</p>
+      <button class="button consent_btn1" onclick="setConsent('true')">Add</button>
+      <button class="button consent_btn2" onclick="setConsent('false')">Revoke</button>
+    </div>
+    
     <div class="box">
       <button class="button addBtn" onclick="redirectAdd()">+</button>
       <button class="button refreshBtn fa fa-refresh fa-xl" onclick="refresh()"></button>
