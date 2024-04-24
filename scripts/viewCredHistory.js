@@ -58,12 +58,9 @@ function getCookieToken() {
 	  cookies[i] = cookies[i].split('=')
 	};
 	for (let x = 0; x < cookies.length; x++){
-	  if (cookies[x][0] == 'token') {
+	  if (cookies[x][0].trim() == 'token') {
 		  return cookies[x][1];
 	  }
-    else {
-      return null
-    };
 	};
 };
 function clearElement(id) {

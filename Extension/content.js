@@ -8,9 +8,13 @@ function checkField(name){
       console.log('checking Name '+name)
       field = document.querySelector('input[name*='+name+']');
       if (!field) {
-        console.log(name+ " FIELD NOT FOUND")
-        console.log('-----')
-        return null
+        console.log('checking Placeholder '+name)
+        field = document.querySelector('input[placeholder*='+name+']');
+        if(!field) {
+          console.log(name+ " FIELD NOT FOUND")
+          console.log('-----')
+          return null
+        }
       }
       else {
         console.log(name+ " FIELD FOUND: "+field)
@@ -55,7 +59,7 @@ function autofill(token) {
             'Authorization': 'Bearer '+token
           }
         }; 
-        fetch("https://passwordless.duckdns.org:8000/creds/getCredAutoFill?siteurl="+window.location.href,options)
+        fetch("https://passwordless.duckdns.org:8000/creds/getCredAutoFill?siteurl="+window.location.hostname,options)
         .then(function(data){
           if (data.status == 200) {
             return data.json()
@@ -71,13 +75,13 @@ function autofill(token) {
           }
           else {
             let ask_credentials = '[n]   email  |  username\n';
-            for (i = 0;i <= data.length-1; i++) {
-              const cred = data[i];
+            for (i = 1;i <= data.length; i++) {
+              const cred = data[i-1];
               ask_credentials = ask_credentials+'['+i+']   '+cred.email+' | '+cred.username+'\n';
               console.log(ask_credentials) //current
             }
             const choice = parseInt(prompt("Multiple Saved Credentials, please select the number of which to load:\n"+ask_credentials));
-            loadCred(data[0], pwd_field)
+            loadCred(data[choice-1], pwd_field)
             delete data[0];
           }
         }) 
@@ -87,7 +91,7 @@ function autofill(token) {
 function main() {
   (async () => {
     const consent = await chrome.runtime.sendMessage({rq:'autofill_consent'})
-    if (consent.consent) {
+    if (consent.consent == 'true') {
       const response = await chrome.runtime.sendMessage({rq:'token'});
       autofill(response.token);
     }

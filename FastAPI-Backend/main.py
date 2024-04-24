@@ -29,11 +29,7 @@ if __name__ == "main":
 
 app = FastAPI()
 origins = [
-    "http://passwordless.duckdns.org",
-    "http://www.passwordless.duckdns.org",
-    "https://passwordless.duckdns.org",
-    "https://www.passwordless.duckdns.org",
-    'null'
+    "*"
 ]
 app.add_middleware(
     CORSMiddleware,
