@@ -107,7 +107,7 @@ def modify_cred(updCred: CredentialIn):
     cred.site = updCred.site
     cred.username = updCred.username
     cred.email = updCred.email
-    cred.password = updCred.password
+    cred.password = str(AES_encrypt(updCred.password))
     db.add(cred)
     db.commit()
 
