@@ -1,4 +1,7 @@
-Running this program does take some effort and time to setup all the server software and have the files located in the correct places. I HIGHLY reccomend simply accessing https://passwordless.duckdns.org and testing the program there whilst looking at the code on this github page for refernce to see how it works. Alternatively, here are the step-by-step instructions to run this software on your own public domain (because this cannot work when running locally or from files as cookies must be stored).
+Running this program does take some effort and time to setup all the server software and have the files located in the correct places. I HIGHLY reccomend simply accessing https://passwordless.duckdns.org and testing the program there whilst looking at the code on this github page for reference to see how it works. To do this, you must first trust 'https://passwordless.duckdns.org:8000/' by visiting it and pressing proceed anyway before visiting 'https://passwordless.duckdns.org'. Otherwise, the website will not function. This is due to me having a self-signed SSL certificate and not spending money to get an authorised one.
+
+
+Alternatively if you do wish to run the entire setup yourself, here are the step-by-step instructions to run this software on your own public domain (because this cannot work when running locally or from files as cookies must be stored).
 
 
 Step-By-Step guide to put PasswordLess into production on your hardware:
@@ -9,7 +12,7 @@ Step-By-Step guide to put PasswordLess into production on your hardware:
 5. open a command prompt in C:Apache24\htdocs, delete the existing index.html file and run 'git clone https://github.com/Katafuu/PasswordLess_Website C:\Apache24\htdocs'
 6. copy the FastAPI-Backend folder from the htdocs folder into a different directory of your choosing, I will be using C:Desktop for this tutorial.
 7. open a command prompt into C:Desktop/FastAPI-Backend/ and run './venv/Scripts/python.exe apprun.py'. Green text should appear saying that the server is running
-8. now copy the 
+
 
 
 
