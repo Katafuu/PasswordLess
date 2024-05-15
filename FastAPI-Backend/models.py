@@ -7,10 +7,6 @@ class encrypted_data(SQLModel):
    url:str
    salt:bytes
    iv:bytes
-async def AES_encrypt(data: str):
-  key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
-  ciphertext = PyAES256().encrypt(data,key)
-  return ciphertext
 
 def get_date():
    return datetime.datetime.now().strftime("%x")
@@ -62,5 +58,5 @@ class oldCredential(CredentialBase, table=True):
 
 class oldCredOut(CredentialOut):
   date_removed: Optional[str] = Field(default_factory=get_date)
-#add child account, account type field and one to many link (max 1 parent)
+
 

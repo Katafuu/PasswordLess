@@ -147,9 +147,11 @@ async def addCred(cred: CredentialIn, current_user: Annotated[UserIn, Depends(pr
 async def modifyCred(request: Request, current_user: Annotated[UserIn,  Depends(process_token)]):
    body = await request.json()
    updCred = CredentialIn(**body)
+   updCred.password = AES_encrypt(updCred.password).model_dump_json()
    print(updCred)
    response = db.modify_cred(updCred)
    return response
+
 @app.delete("/creds/delCred")
 async def delCred(credid: str, current_user: Annotated[UserIn, Depends(process_token)]):
    return db.delete_cred(credid, False)

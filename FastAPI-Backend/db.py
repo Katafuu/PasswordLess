@@ -1,7 +1,13 @@
 from sqlmodel import SQLModel, create_engine, Session, select, or_, col # col used to say that an expression is a db column rather than a standard python model
 from models import *
 from passlib.context import CryptContext
+import json
 
+def AES_encrypt(data: str):
+  key = "ff4f015ead69df0f0729154409375600bfe0ddf7942c0e2e0fe818509e66fb2e"
+  ciphertext = PyAES256().encrypt(data,key)
+  print(f"CIPHER:  {ciphertext}")
+  return encrypted_data(**ciphertext)
 
 
 DATABASE_URL = "sqlite:///dbtest.db"
@@ -101,13 +107,12 @@ def modify_cred(updCred: CredentialIn):
     oldCred = cred.model_dump()
     del oldCred['id'] # ensuring id is empty so that it generates a new unique id in the db
     oldCred = oldCredential(**oldCred, credid=cred.id, date_removed=get_date()) #saving old credential
-    oldCred.password = str(AES_encrypt(oldCred.password))
     db.add(oldCred)
 
     cred.site = updCred.site
     cred.username = updCred.username
     cred.email = updCred.email
-    cred.password = str(AES_encrypt(updCred.password))
+    cred.password = updCred.password
     db.add(cred)
     db.commit()
 
