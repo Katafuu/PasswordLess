@@ -68,7 +68,7 @@ def get_creds(current_user: UserIn):
   
 def get_old_creds_byid(id: int, uid: int):
   with Session(engine) as db:
-    result = db.exec(select(oldCredential).where(oldCredential.credid == CredentialInDB.id).where(CredentialInDB.owner_id == id)).all()
+    result = db.exec(select(oldCredential).where(oldCredential.credid == CredentialInDB.id).where(CredentialInDB.owner_id == uid)).all()
     for x in result:
       print("X:---")
       print(x, type(x))

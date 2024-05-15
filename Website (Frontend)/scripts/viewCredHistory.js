@@ -108,7 +108,7 @@ function refresh() {
 	const searchParams = new URLSearchParams(window.location.search);
   const credid = searchParams.get("credid");
 	const headers = {'Authorization': 'Bearer '+token};
-	fetch("https://passwordless.duckdns.org:8000/creds/getOldCreds?tbl=old&credid="+credid, {headers})
+	fetch("https://passwordless.duckdns.org:8000/creds/getOldCreds?credid="+credid, {headers})
 	.then(data => data.json())
 	.then(function(data) {
 		console.log(data)
